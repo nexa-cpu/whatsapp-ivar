@@ -1,74 +1,63 @@
 const express = require('express');
 const router = express.Router();
-const whatsappHandler = require('../handlers/whatsappHandler');
+const { processMessage } = require('../handlers/whatsappHandler');
 
-// Webhook verification (GET) - Meta sends this to verify your webhook
+// ─── WEBHOOK VERIFICATION (GET) ───────────────────────────────────────────────
+// Meta calls this once when you set up the webhook to confirm it's yours
+
 router.get('/', (req, res) => {
   const mode = req.query['hub.mode'];
   const token = req.query['hub.verify_token'];
   const challenge = req.query['hub.challenge'];
 
-  // Check if a token and mode were sent
-  if (mode && token) {
-    // Check the mode and token sent are correct
-    if (mode === 'subscribe' && token === process.env.VERIFY_TOKEN) {
-      console.log('✅ Webhook verified');
-      res.status(200).send(challenge);
-    } else {
-      // Token doesn't match
-      console.log('❌ Webhook verification failed');
-      res.sendStatus(403);
-    }
+  if (mode === 'subscribe' && token === process.env.VERIFY_TOKEN) {
+    console.log('✅ Webhook verified by Meta');
+    res.status(200).send(challenge);
   } else {
-    res.sendStatus(400);
+    console.log('❌ Webhook verification failed — token mismatch');
+    res.sendStatus(403);
   }
 });
 
-// Webhook POST endpoint (receives messages from WhatsApp)
+// ─── INCOMING MESSAGES (POST) ─────────────────────────────────────────────────
+// Every WhatsApp message hits this endpoint
+
 router.post('/', async (req, res) => {
   const body = req.body;
 
-  console.log('📨 Incoming webhook:', JSON.stringify(body, null, 2));
-
-  // Return 200 OK immediately (Meta requires fast response)
+  // Respond to Meta immediately — they require a fast 200
+  // Processing happens asynchronously after this
   res.status(200).send('EVENT_RECEIVED');
 
-  // Check if this is a WhatsApp message event
-  if (body.object === 'whatsapp_business_account') {
-    if (body.entry && body.entry[0].changes && body.entry[0].changes[0]) {
-      const change = body.entry[0].changes[0];
-      
-      // Check if this is a message
-      if (change.value && change.value.messages && change.value.messages[0]) {
-        const message = change.value.messages[0];
-        const from = message.from; // Customer's phone number
-        const messageBody = message.text?.body; // Message text
-        const messageId = message.id;
-        const timestamp = message.timestamp;
+  if (body.object !== 'whatsapp_business_account') return;
 
-        console.log(`💬 Message from ${from}: ${messageBody}`);
+  const entry = body.entry?.[0];
+  const change = entry?.changes?.[0];
+  const value = change?.value;
 
-        // Only process text messages
-        if (messageBody) {
-          try {
-            // Process the message and send AI response
-            await whatsappHandler.processMessage(from, messageBody, messageId);
-          } catch (error) {
-            console.error('❌ Error processing message:', error);
-          }
-        } else {
-          console.log('⚠️  Non-text message, ignoring');
-        }
-      }
+  // ─── INCOMING MESSAGE ────────────────────────────────────────────────
+  if (value?.messages?.[0]) {
+    const message = value.messages[0];
+    const from = message.from;
+    const messageId = message.id;
+    const messageText = message.text?.body;
 
-      // Check if this is a message status update (delivered, read, etc.)
-      if (change.value && change.value.statuses && change.value.statuses[0]) {
-        const status = change.value.statuses[0];
-        console.log(`📊 Message status: ${status.status} for message ${status.id}`);
-      }
+    console.log(`💬 Message from ${from}: "${messageText}"`);
+
+    // Only process text messages for now
+    if (messageText) {
+      processMessage(from, messageText, messageId).catch(err => {
+        console.error('❌ Unhandled processMessage error:', err.message);
+      });
+    } else {
+      console.log(`⚠️  Non-text message from ${from} — ignored`);
     }
-  } else {
-    console.log('⚠️  Unknown webhook event:', body.object);
+  }
+
+  // ─── MESSAGE STATUS UPDATES ──────────────────────────────────────────
+  if (value?.statuses?.[0]) {
+    const status = value.statuses[0];
+    console.log(`📊 Status update: ${status.status} for message ${status.id}`);
   }
 });
 

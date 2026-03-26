@@ -4,11 +4,12 @@ const router = express.Router();
 router.get('/', (req, res) => {
   res.json({
     status: 'healthy',
+    service: 'IVAR v2.0',
+    company: 'Galvaniq',
+    uptime: `${Math.floor(process.uptime())}s`,
     timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    service: 'WhatsApp IVAR',
-    whatsapp_api: 'connected',
-    ai: 'openai-gpt4o'
+    ai: 'openai-gpt4o',
+    whatsapp: 'connected',
   });
 });
 

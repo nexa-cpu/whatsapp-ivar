@@ -1,115 +1,199 @@
 const { MongoClient } = require('mongodb');
 
 let db = null;
-let client = null;
+let mongoClient = null;
+
+// ─── CONNECTION ───────────────────────────────────────────────────────────────
 
 async function connect() {
-  if (db) {
-    return db;
-  }
+  if (db) return db;
 
-  try {
-    const uri = process.env.MONGODB_URI;
-    
-    if (!uri) {
-      throw new Error('MONGODB_URI environment variable is not set');
-    }
+  const uri = process.env.MONGODB_URI;
+  if (!uri) throw new Error('MONGODB_URI is not set in environment variables');
 
-    client = new MongoClient(uri);
-    await client.connect();
-    
-    db = client.db('whatsapp-ivar');
-    
-    console.log('✅ Connected to MongoDB');
-    
-    // Create indexes for better performance
-    await db.collection('conversations').createIndex({ from: 1, timestamp: -1 });
-    await db.collection('conversations').createIndex({ messageId: 1 }, { unique: true });
-    
-    return db;
-  } catch (error) {
-    console.error('❌ MongoDB connection error:', error);
-    throw error;
-  }
+  mongoClient = new MongoClient(uri);
+  await mongoClient.connect();
+
+  db = mongoClient.db('ivar');
+
+  // Indexes for performance
+  await db.collection('conversations').createIndex({ from: 1, timestamp: -1 });
+  await db.collection('conversations').createIndex({ messageId: 1 }, { unique: true });
+  await db.collection('leads').createIndex({ from: 1 }, { unique: true });
+
+  console.log('✅ MongoDB connected');
+  return db;
 }
 
-async function saveMessage(from, userMessage, aiResponse, messageId) {
+// ─── MESSAGES ─────────────────────────────────────────────────────────────────
+
+/**
+ * Saves a message exchange (customer + IVAR) to the conversations collection.
+ */
+async function saveMessage({ from, userMessage, aiResponse, messageId, handoverTriggered = false }) {
   try {
     const database = await connect();
-    const collection = database.collection('conversations');
 
-    const document = {
+    await database.collection('conversations').insertOne({
       from,
       userMessage,
       aiResponse,
       messageId,
-      timestamp: new Date()
-    };
+      handoverTriggered,
+      timestamp: new Date(),
+    });
 
-    await collection.insertOne(document);
-    console.log(`💾 Message saved to database (from: ${from})`);
+    // Update or create the lead record for this customer
+    await upsertLead(from, { lastSeen: new Date() });
+
+    console.log(`💾 Message saved for ${from}`);
   } catch (error) {
-    // If duplicate messageId (already processed), just log and continue
     if (error.code === 11000) {
-      console.log(`⚠️  Duplicate message ${messageId}, skipping`);
+      console.log(`⚠️  Duplicate message ${messageId} — skipping`);
       return;
     }
-    console.error('❌ Error saving message:', error);
-    // Don't throw - we don't want to fail the whole request if DB is down
+    console.error('❌ saveMessage error:', error.message);
+    // Non-fatal — don't crash the pipeline
   }
 }
 
-async function getConversationHistory(from, limit = 5) {
+/**
+ * Returns last N message exchanges for a customer, in chronological order.
+ */
+async function getConversationHistory(from, limit = 8) {
   try {
     const database = await connect();
-    const collection = database.collection('conversations');
 
-    const messages = await collection
+    const messages = await database.collection('conversations')
       .find({ from })
       .sort({ timestamp: -1 })
       .limit(limit)
       .toArray();
 
-    // Reverse to get chronological order
-    return messages.reverse();
+    return messages.reverse(); // Chronological order for OpenAI context
   } catch (error) {
-    console.error('❌ Error getting conversation history:', error);
+    console.error('❌ getConversationHistory error:', error.message);
     return [];
   }
 }
 
-// Get stats (useful for monitoring)
+// ─── LEADS ────────────────────────────────────────────────────────────────────
+
+/**
+ * Creates or updates a lead record for a customer.
+ */
+async function upsertLead(from, updates = {}) {
+  try {
+    const database = await connect();
+
+    await database.collection('leads').updateOne(
+      { from },
+      {
+        $set: { ...updates, updatedAt: new Date() },
+        $setOnInsert: {
+          from,
+          status: 'new',
+          createdAt: new Date(),
+        },
+      },
+      { upsert: true }
+    );
+  } catch (error) {
+    console.error('❌ upsertLead error:', error.message);
+  }
+}
+
+/**
+ * Returns the current status of a lead.
+ * Used to check if this customer has already been handed over.
+ */
+async function getLeadStatus(from) {
+  try {
+    const database = await connect();
+    const lead = await database.collection('leads').findOne({ from });
+    return lead?.status || 'new';
+  } catch (error) {
+    console.error('❌ getLeadStatus error:', error.message);
+    return 'new';
+  }
+}
+
+/**
+ * Updates lead status (e.g. 'qualifying', 'hot', 'handed_over', 'cold').
+ * Also logs the handover reason if provided.
+ */
+async function updateLeadStatus(from, status, handoverReason = null) {
+  try {
+    const database = await connect();
+
+    const update = {
+      status,
+      updatedAt: new Date(),
+    };
+
+    if (handoverReason) {
+      update.handoverReason = handoverReason;
+      update.handoverAt = new Date();
+    }
+
+    await database.collection('leads').updateOne(
+      { from },
+      { $set: update },
+      { upsert: true }
+    );
+
+    console.log(`📊 Lead ${from} status → ${status}`);
+  } catch (error) {
+    console.error('❌ updateLeadStatus error:', error.message);
+  }
+}
+
+// ─── STATS ────────────────────────────────────────────────────────────────────
+
+/**
+ * Returns a dashboard summary — useful for monitoring and client reports.
+ */
 async function getStats() {
   try {
     const database = await connect();
-    const collection = database.collection('conversations');
 
-    const totalMessages = await collection.countDocuments();
-    const uniqueCustomers = await collection.distinct('from');
-    
+    const [totalMessages, totalLeads, handedOver, hotLeads] = await Promise.all([
+      database.collection('conversations').countDocuments(),
+      database.collection('leads').countDocuments(),
+      database.collection('leads').countDocuments({ status: 'handed_over' }),
+      database.collection('leads').countDocuments({ status: 'hot' }),
+    ]);
+
     return {
       totalMessages,
-      uniqueCustomers: uniqueCustomers.length,
-      timestamp: new Date()
+      totalLeads,
+      handedOver,
+      hotLeads,
+      conversionRate: totalLeads > 0 ? `${Math.round((handedOver / totalLeads) * 100)}%` : '0%',
+      timestamp: new Date(),
     };
   } catch (error) {
-    console.error('❌ Error getting stats:', error);
+    console.error('❌ getStats error:', error.message);
     return { error: error.message };
   }
 }
 
-// Graceful shutdown
+// ─── GRACEFUL SHUTDOWN ────────────────────────────────────────────────────────
+
 process.on('SIGINT', async () => {
-  if (client) {
-    await client.close();
+  if (mongoClient) {
+    await mongoClient.close();
     console.log('📴 MongoDB connection closed');
-    process.exit(0);
   }
+  process.exit(0);
 });
 
 module.exports = {
   connect,
   saveMessage,
   getConversationHistory,
-  getStats
+  getLeadStatus,
+  updateLeadStatus,
+  upsertLead,
+  getStats,
 };

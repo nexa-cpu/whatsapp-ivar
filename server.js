@@ -5,45 +5,60 @@ require('dotenv').config();
 
 const whatsappRoutes = require('./routes/whatsapp');
 const healthRoutes = require('./routes/health');
+const database = require('./database/mongodb');
+const client = require('./config/client');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Routes
+// ─── ROUTES ───────────────────────────────────────────────────────────────────
+
 app.use('/webhook', whatsappRoutes);
 app.use('/health', healthRoutes);
 
-// Root endpoint
+// Root — basic info
 app.get('/', (req, res) => {
   res.json({
     status: 'online',
-    service: 'WhatsApp IVAR - AI Receptionist',
+    service: 'IVAR — AI Receptionist',
     company: 'Galvaniq',
-    version: '1.0.0',
-    message: 'WhatsApp AI is running. Send messages to configured number.'
+    client: client.business.name,
+    version: '2.0.0',
   });
 });
 
-// Error handling
+// Stats endpoint — shows lead pipeline data
+app.get('/stats', async (req, res) => {
+  try {
+    const stats = await database.getStats();
+    res.json({ business: client.business.name, ...stats });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ─── ERROR HANDLING ───────────────────────────────────────────────────────────
+
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(500).json({ 
+  console.error('Server error:', err);
+  res.status(500).json({
     error: 'Internal server error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong',
   });
 });
 
-// Start server
+// ─── START ────────────────────────────────────────────────────────────────────
+
 app.listen(PORT, () => {
-  console.log(`🚀 WhatsApp IVAR running on port ${PORT}`);
-  console.log(`📱 Business: Galvaniq`);
-  console.log(`⚡ WhatsApp Business API: CONNECTED`);
+  console.log(`\n🚀 IVAR v2.0 — ${client.business.name}`);
+  console.log(`📱 WhatsApp Business API: CONNECTED`);
   console.log(`🤖 AI: OpenAI GPT-4o`);
+  console.log(`🌍 Industry: ${client.business.industry}`);
+  console.log(`📡 Port: ${PORT}\n`);
 });
 
 module.exports = app;
