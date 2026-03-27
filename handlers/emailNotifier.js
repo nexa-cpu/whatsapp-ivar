@@ -1,42 +1,27 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const client = require('../config/client');
 
 /**
- * Creates a nodemailer transport using Gmail SMTP.
- * Uses app password — NOT your regular Gmail password.
- * Generate one at: myaccount.google.com/apppasswords
- */
-function createTransport() {
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_APP_PASSWORD,
-    },
-  });
-}
-
-/**
- * Sends a handover alert email to the business owner.
- * Includes customer number, reason, and last few messages.
+ * Sends a handover alert email via Resend API.
+ * Uses HTTPS (port 443) — works on Railway, no SMTP blocks.
+ * Free tier: 3,000 emails/month.
  */
 async function sendHandoverEmail({ customerNumber, reason, conversationHistory }) {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_APP_PASSWORD) {
-    console.log('⚠️  Email not configured — skipping email alert');
+  if (!process.env.RESEND_API_KEY) {
+    console.log('⚠️  RESEND_API_KEY not set — skipping email alert');
     return;
   }
 
   try {
-    const transporter = createTransport();
+    const resend = new Resend(process.env.RESEND_API_KEY);
 
-    // Format conversation history for email
     const historyText = conversationHistory.slice(-6).map(msg =>
       `Customer: ${msg.userMessage}\nIVAR: ${msg.aiResponse}`
     ).join('\n\n---\n\n');
 
     const emailBody = `
 IVAR HANDOVER ALERT — ${client.business.name}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 A customer needs a human response. Please follow up immediately.
 
@@ -47,24 +32,21 @@ TIME: ${new Date().toLocaleString('en-ZW', { timeZone: 'Africa/Harare' })}
 ━━━ RECENT CONVERSATION ━━━
 ${historyText || 'No history available.'}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Sent by IVAR — Galvaniq
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Sent by IVAR — Galvaniq Group
     `.trim();
 
-    const mailOptions = {
-      from: `"IVAR — ${client.business.name}" <${process.env.EMAIL_USER}>`,
+    await resend.emails.send({
+      from: 'IVAR <onboarding@resend.dev>',
       to: client.owner.email,
-      cc: client.owner.backupEmail || '',
-      subject: `🔔 IVAR Handover — Customer +${customerNumber} needs you`,
+      subject: `IVAR Handover — Customer +${customerNumber} needs you`,
       text: emailBody,
-    };
+    });
 
-    await transporter.sendMail(mailOptions);
     console.log(`📧 Handover email sent to ${client.owner.email}`);
 
   } catch (error) {
     console.error('❌ Email send failed:', error.message);
-    // Don't throw — email failure should not break the handover flow
   }
 }
 

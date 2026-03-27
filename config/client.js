@@ -18,8 +18,8 @@ module.exports = {
       "Galvaniq is an AI technology company building intelligent business tools for African enterprises. " +
       "Our flagship product is IVAR — a WhatsApp-based AI receptionist that handles customer enquiries, " +
       "qualifies leads, and represents your business 24/7 so your team only steps in when it matters most.",
-    website: "Coming soon",
-    workingHours: "IVAR is available 24/7. Michael (Founder) is available Mon–Sat, 8am–7pm CAT.",
+    website: "galvaniqgroup.co.zw",
+    workingHours: "IVAR is available 24/7. Michael (Managing Director) is available Mon–Sat, 8am–8pm CAT.",
     currency: "USD",
   },
 
@@ -27,7 +27,7 @@ module.exports = {
   owner: {
     name: "Michael",
     whatsappNumber: "263788946950",     // Michael's number — full international format, no +
-    email: "galvaniqgroup@gmail.com",
+    email: "ceo@galvaniq.co.zw",
     backupEmail: "",
     directLine: "+263 78 894 6950",    // Shown to customers in holding messages
   },
@@ -195,7 +195,7 @@ module.exports = {
 
   // ─── HANDOVER MESSAGE ──────────────────────────────────────────────
   handoverMessage:
-    "I'm connecting you with Michael, our founder, right now. He'll be with you shortly. " +
+    "I'm connecting you with Michael, Managing Director, right now. He'll be with you shortly. " +
     "If you'd like to reach him directly in the meantime, you can WhatsApp him at +263 78 894 6950.",
 
   // ─── NEGOTIATION GUIDANCE ──────────────────────────────────────────
