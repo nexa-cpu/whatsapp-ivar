@@ -5,6 +5,7 @@ require('dotenv').config();
 
 const whatsappRoutes = require('./routes/whatsapp');
 const healthRoutes = require('./routes/health');
+const adminRoutes = require('./routes/admin');
 const database = require('./database/mongodb');
 const client = require('./config/client');
 
@@ -19,6 +20,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use('/webhook', whatsappRoutes);
 app.use('/health', healthRoutes);
+app.use('/admin', adminRoutes);
 
 // Root — basic info
 app.get('/', (req, res) => {

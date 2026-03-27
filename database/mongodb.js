@@ -229,4 +229,18 @@ module.exports = {
   updateLeadMeta,
   upsertLead,
   getStats,
+  resetAllLeads,
 };
+
+async function resetAllLeads() {
+  try {
+    const database = await connect();
+    await database.collection('leads').updateMany(
+      {},
+      { $set: { status: 'new', lastHoldingMessageAt: null, updatedAt: new Date() } }
+    );
+    console.log('🔄 All leads reset');
+  } catch (error) {
+    console.error('❌ resetAllLeads error:', error.message);
+  }
+}
