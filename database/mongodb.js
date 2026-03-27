@@ -188,12 +188,45 @@ process.on('SIGINT', async () => {
   process.exit(0);
 });
 
+/**
+ * Returns the full lead document (not just status).
+ * Needed for handover expiry and holding message cooldown checks.
+ */
+async function getLeadFull(from) {
+  try {
+    const database = await connect();
+    return await database.collection('leads').findOne({ from });
+  } catch (error) {
+    console.error('❌ getLeadFull error:', error.message);
+    return null;
+  }
+}
+
+/**
+ * Updates arbitrary metadata fields on a lead document.
+ * Used for tracking lastHoldingMessageAt etc.
+ */
+async function updateLeadMeta(from, fields = {}) {
+  try {
+    const database = await connect();
+    await database.collection('leads').updateOne(
+      { from },
+      { $set: { ...fields, updatedAt: new Date() } },
+      { upsert: true }
+    );
+  } catch (error) {
+    console.error('❌ updateLeadMeta error:', error.message);
+  }
+}
+
 module.exports = {
   connect,
   saveMessage,
   getConversationHistory,
   getLeadStatus,
+  getLeadFull,
   updateLeadStatus,
+  updateLeadMeta,
   upsertLead,
   getStats,
 };

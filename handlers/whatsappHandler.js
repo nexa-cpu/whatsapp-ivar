@@ -4,62 +4,60 @@ const { executeHandover } = require('./humanHandover');
 const database = require('../database/mongodb');
 const client = require('../config/client');
 
-/**
- * Full message pipeline:
- * 1. Mark message as read (UX)
- * 2. Check if lead is already handed over (skip AI if so)
- * 3. Get conversation history
- * 4. Generate AI response
- * 5. Save message to DB
- * 6. Send reply to customer
- * 7. Execute handover if triggered
- */
+// How long before IVAR re-engages a handed-over lead
+const HANDOVER_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+// Minimum gap between holding messages to same customer
+const HOLDING_COOLDOWN_MS = 3 * 60 * 1000; // 3 minutes
+
 async function processMessage(from, messageText, messageId) {
   console.log(`\n🔄 Processing message from ${from}: "${messageText}"`);
 
-  // Mark as read immediately — good UX
   await markAsRead(messageId);
 
   try {
-    // ─── CHECK IF ALREADY HANDED OVER ────────────────────────────────
-    // If this lead is already with a human, do not re-engage with AI
-    const leadStatus = await database.getLeadStatus(from);
+    const lead = await database.getLeadFull(from);
+    const status = lead?.status || 'new';
 
-    if (leadStatus === 'handed_over') {
-      console.log(`⏭️  Lead ${from} already handed over — AI standing down`);
-      // Optionally send a reminder that a human is coming
-      // Uncomment if you want this behaviour:
-      // await sendWhatsAppMessage(from, "Our team is on their way to you. Please hold on!");
-      return;
+    if (status === 'handed_over') {
+      const handoverAge = lead?.handoverAt
+        ? Date.now() - new Date(lead.handoverAt).getTime()
+        : Infinity;
+
+      if (handoverAge > HANDOVER_EXPIRY_MS) {
+        console.log(`⏰ Handover expired for ${from} — resetting`);
+        await database.updateLeadStatus(from, 'active');
+        // Fall through to AI response
+      } else {
+        const lastHolding = lead?.lastHoldingMessageAt
+          ? Date.now() - new Date(lead.lastHoldingMessageAt).getTime()
+          : Infinity;
+
+        if (lastHolding > HOLDING_COOLDOWN_MS) {
+          await sendWhatsAppMessage(
+            from,
+            `Our team has been notified and will be with you shortly. If it's urgent, you can reach us directly at ${client.owner.directLine}.`
+          );
+          await database.updateLeadMeta(from, { lastHoldingMessageAt: new Date() });
+          console.log(`📨 Holding message sent to ${from}`);
+        } else {
+          console.log(`⏭️  Holding cooldown active for ${from} — skipping`);
+        }
+        return;
+      }
     }
 
-    // ─── GET CONVERSATION HISTORY ─────────────────────────────────────
     const conversationHistory = await database.getConversationHistory(from);
-
-    // ─── GET AI RESPONSE ──────────────────────────────────────────────
     const { reply, handover, handoverReason } = await getResponse(messageText, conversationHistory);
 
     console.log(`🤖 IVAR: "${reply}"`);
     if (handover) console.log(`🚨 Handover triggered: ${handoverReason}`);
 
-    // ─── SAVE TO DATABASE ─────────────────────────────────────────────
-    await database.saveMessage({
-      from,
-      userMessage: messageText,
-      aiResponse: reply,
-      messageId,
-      handoverTriggered: handover,
-    });
-
-    // ─── SEND REPLY TO CUSTOMER ───────────────────────────────────────
+    await database.saveMessage({ from, userMessage: messageText, aiResponse: reply, messageId, handoverTriggered: handover });
     await sendWhatsAppMessage(from, reply);
 
-    // ─── EXECUTE HANDOVER IF NEEDED ───────────────────────────────────
     if (handover && handoverReason) {
-      // Send the handover message to the customer
       await sendWhatsAppMessage(from, client.handoverMessage);
-
-      // Alert the owner
       await executeHandover({
         customerNumber: from,
         reason: handoverReason,
@@ -67,18 +65,14 @@ async function processMessage(from, messageText, messageId) {
       });
     }
 
-    console.log(`✅ Message pipeline complete for ${from}\n`);
+    console.log(`✅ Pipeline complete for ${from}\n`);
 
   } catch (error) {
     console.error(`❌ Pipeline error for ${from}:`, error.message);
-
     try {
-      await sendWhatsAppMessage(
-        from,
-        "I'm having a brief technical issue. Please try again in a moment — or our team can assist you directly."
-      );
-    } catch (sendError) {
-      console.error('❌ Failed to send error message to customer:', sendError.message);
+      await sendWhatsAppMessage(from, "I'm having a brief technical issue. Please try again in a moment.");
+    } catch (e) {
+      console.error('❌ Failed to send error message:', e.message);
     }
   }
 }
