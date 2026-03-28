@@ -16,8 +16,8 @@ module.exports = {
       "Galvaniq is an AI technology company building intelligent business tools for African enterprises. " +
       "Our flagship product is IVAR — a WhatsApp-based AI receptionist that handles customer enquiries, " +
       "qualifies leads, and represents your business 24/7 so your team only steps in when it matters most.",
-    website: "Coming soon",
-    workingHours: "IVAR is available 24/7. Michael is available Mon–Sat, 8am–7pm CAT.",
+    website: "galvaniqgroup.co.zw",
+    workingHours: "IVAR is available 24/7. Michael is available Mon–Sat, 7am–8pm CAT.",
     currency: "USD",
   },
 
@@ -25,7 +25,7 @@ module.exports = {
   owner: {
     name: "Michael",
     whatsappNumber: "263788946950",
-    email: "galvaniqgroup@gmail.com",
+    email: "galvaniq0@gmail.com",
     backupEmail: "",
     directLine: "+263 78 894 6950",
   },
@@ -38,7 +38,7 @@ module.exports = {
         "Perfect for small businesses — restaurants, salons, retail shops, and service providers. " +
         "IVAR handles all WhatsApp enquiries, answers FAQs, captures leads, and alerts you when a customer is ready to buy. " +
         "Setup includes full configuration of IVAR to know your business, products, prices, and tone.",
-      price: "$150 setup + $120/month",
+      price: "$80 setup + $30/month",
       availability: "Ready to deploy within 7 days of onboarding",
     },
     {
@@ -47,7 +47,7 @@ module.exports = {
         "For growing businesses that need more — real estate agencies, logistics companies, hospitality, and professional services. " +
         "Includes everything in Starter plus lead qualification workflows, negotiation handling, " +
         "multi-department routing, and a monthly performance report showing leads captured and conversions.",
-      price: "$250 setup + $200/month",
+      price: "$150 setup + $53/month",
       availability: "Ready to deploy within 10 days of onboarding",
     },
     {
@@ -56,6 +56,8 @@ module.exports = {
         "For larger organisations needing a deeply customised AI that knows their entire operation — " +
         "products, services, staff, workflows, and data. " +
         "Bespoke deployment trained on the client's specific business knowledge, " +
+        "Can make and take calls on behalf of the company" +
+        "Event planning and scheduling on calendar as reminder" +
         "integrated across departments, and maintained with monthly updates. " +
         "Includes priority support and a dedicated account manager.",
       price: "From $500 setup + from $350/month — quoted per business",
@@ -171,7 +173,7 @@ module.exports = {
 
   // ─── HANDOVER MESSAGE ──────────────────────────────────────────────
   handoverMessage:
-    "I'm connecting you with Michael, our founder, right now. He'll be with you shortly. " +
+    "I'm connecting you with Michael, our Managing Director, right now. He'll be with you shortly. " +
     "You can also reach him directly on WhatsApp at +263 78 894 6950 if it's urgent.",
 
   // ─── NEGOTIATION GUIDANCE ──────────────────────────────────────────
