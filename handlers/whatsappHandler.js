@@ -4,12 +4,6 @@ const { executeHandover } = require('./humanHandover');
 const database = require('../database/mongodb');
 const client = require('../config/client');
 
-// How long before IVAR re-engages a handed-over lead
-const HANDOVER_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
-
-// Minimum gap between holding messages to same customer
-const HOLDING_COOLDOWN_MS = 3 * 60 * 1000; // 3 minutes
-
 async function processMessage(from, messageText, messageId) {
   console.log(`\n🔄 Processing message from ${from}: "${messageText}"`);
 
@@ -19,49 +13,37 @@ async function processMessage(from, messageText, messageId) {
     const lead = await database.getLeadFull(from);
     const status = lead?.status || 'new';
 
-    if (status === 'handed_over') {
-      const handoverAge = lead?.handoverAt
-        ? Date.now() - new Date(lead.handoverAt).getTime()
-        : Infinity;
-
-      if (handoverAge > HANDOVER_EXPIRY_MS) {
-        console.log(`⏰ Handover expired for ${from} — resetting`);
-        await database.updateLeadStatus(from, 'active');
-        // Fall through to AI response
-      } else {
-        const lastHolding = lead?.lastHoldingMessageAt
-          ? Date.now() - new Date(lead.lastHoldingMessageAt).getTime()
-          : Infinity;
-
-        if (lastHolding > HOLDING_COOLDOWN_MS) {
-          await sendWhatsAppMessage(
-            from,
-            `Our team has been notified and will be with you shortly. If it's urgent, you can reach us directly at ${client.owner.directLine}.`
-          );
-          await database.updateLeadMeta(from, { lastHoldingMessageAt: new Date() });
-          console.log(`📨 Holding message sent to ${from}`);
-        } else {
-          console.log(`⏭️  Holding cooldown active for ${from} — skipping`);
-        }
-        return;
-      }
-    }
-
+    // Get conversation history
     const conversationHistory = await database.getConversationHistory(from);
+
+    // Get AI response regardless of handover status
+    // IVAR keeps the conversation warm — Michael already got the alert
     const { reply, handover, handoverReason } = await getResponse(messageText, conversationHistory);
 
     console.log(`🤖 IVAR: "${reply}"`);
-    if (handover) console.log(`🚨 Handover triggered: ${handoverReason}`);
 
-    await database.saveMessage({ from, userMessage: messageText, aiResponse: reply, messageId, handoverTriggered: handover });
+    // Save to DB
+    await database.saveMessage({
+      from,
+      userMessage: messageText,
+      aiResponse: reply,
+      messageId,
+      handoverTriggered: handover,
+    });
+
+    // Send reply to customer
     await sendWhatsAppMessage(from, reply);
 
-    if (handover && handoverReason) {
+    // Only fire handover alert once — don't re-alert if already handed over
+    if (handover && handoverReason && status !== 'handed_over') {
       await sendWhatsAppMessage(from, client.handoverMessage);
       await executeHandover({
         customerNumber: from,
         reason: handoverReason,
-        conversationHistory: [...conversationHistory, { userMessage: messageText, aiResponse: reply }],
+        conversationHistory: [
+          ...conversationHistory,
+          { userMessage: messageText, aiResponse: reply },
+        ],
       });
     }
 
@@ -70,7 +52,10 @@ async function processMessage(from, messageText, messageId) {
   } catch (error) {
     console.error(`❌ Pipeline error for ${from}:`, error.message);
     try {
-      await sendWhatsAppMessage(from, "I'm having a brief technical issue. Please try again in a moment.");
+      await sendWhatsAppMessage(
+        from,
+        "Sorry, having a quick technical issue. Try again in a moment."
+      );
     } catch (e) {
       console.error('❌ Failed to send error message:', e.message);
     }
