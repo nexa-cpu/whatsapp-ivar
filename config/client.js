@@ -1,147 +1,127 @@
 /**
- * IVAR CLIENT CONFIGURATION — GALVANIQ GROUP
+ * IVAR CLIENT CONFIGURATION — CHICKEN HUT ZIMBABWE
  * ─────────────────────────────────────────────────────────────────
- * IVAR configured as Galvaniq's own sales & demo assistant.
- * This is also the live demo — the product sells itself.
+ * Configured for Chicken Hut's WhatsApp ordering and customer service.
+ * Replaces their current broken scripted bot with a fully intelligent,
+ * conversational AI that handles orders, complaints, and enquiries.
  */
 
 module.exports = {
 
   // ─── BUSINESS IDENTITY ─────────────────────────────────────────────
   business: {
-    name: "Galvaniq Group",
-    industry: "services",
-    location: "Zimbabwe | Serving English-speaking Africa",
+    name: "Chicken Hut",
+    industry: "hospitality",
+    location: "Multiple locations across Zimbabwe",
     description:
-      "Galvaniq is an AI technology company building intelligent business tools for African enterprises. " +
-      "Our flagship product is IVAR — a WhatsApp-based AI receptionist that handles customer enquiries, " +
-      "qualifies leads, and represents your business 24/7 so your team only steps in when it matters most.",
-    website: "galvaniqgroup.co.zw",
-    workingHours: "IVAR is available 24/7. Michael is available Mon–Sat, 7am–8pm CAT.",
-    currency: "USD",
+      "Chicken Hut is Zimbabwe's beloved Portuguese Bar-B-Q Shop, serving flame-grilled chicken " +
+      "and a full menu of meals, sides, and drinks across multiple locations. " +
+      "We offer dine-in, takeaway, and delivery through our partnership with LastMile.",
+    website: "chickenhut.co.zw",
+    workingHours: "Sunday–Thursday: 9am–9pm | Friday–Saturday: 9am–10pm",
+    currency: "USD and ZiG accepted",
   },
 
   // ─── OWNER / ESCALATION CONTACT ────────────────────────────────────
   owner: {
-    name: "Michael",
-    whatsappNumber: "263788946950",
-    email: "galvaniq0@gmail.com",
+    name: "Itai",
+    whatsappNumber: "263XXXXXXXXX",   // Replace with Itai's actual number after meeting
+    email: "info@chickenhut.co.zw",
     backupEmail: "",
-    directLine: "+263 78 894 6950",
+    directLine: "To be confirmed",
   },
 
   // ─── PRODUCTS / SERVICES ───────────────────────────────────────────
   offerings: [
     {
-      name: "IVAR Starter",
-      description:
-        "Perfect for small businesses — restaurants, salons, retail shops, and service providers. " +
-        "IVAR handles all WhatsApp enquiries, answers FAQs, captures leads, and alerts you when a customer is ready to buy. " +
-        "Setup includes full configuration of IVAR to know your business, products, prices, and tone.",
-      price: "$80 setup + $30/month",
-      availability: "Ready to deploy within 7 days of onboarding",
+      name: "Quarter Chicken Meal",
+      description: "Flame-grilled quarter chicken served with chips and a roll.",
+      price: "From $4.50",
+      availability: "Available during business hours at all branches",
     },
     {
-      name: "IVAR Professional",
-      description:
-        "For growing businesses that need more — real estate agencies, logistics companies, hospitality, and professional services. " +
-        "Includes everything in Starter plus lead qualification workflows, negotiation handling, " +
-        "multi-department routing, and a monthly performance report showing leads captured and conversions.",
-      price: "$150 setup + $53/month",
-      availability: "Ready to deploy within 10 days of onboarding",
+      name: "Half Chicken Meal",
+      description: "Flame-grilled half chicken with chips and a roll.",
+      price: "From $7.50",
+      availability: "Available during business hours at all branches",
     },
     {
-      name: "IVAR Enterprise",
-      description:
-        "For larger organisations needing a deeply customised AI that knows their entire operation — " +
-        "products, services, staff, workflows, and data. " +
-        "Bespoke deployment trained on the client's specific business knowledge, " +
-        "Can make and take calls on behalf of the company" +
-        "Event planning and scheduling on calendar as reminder" +
-        "integrated across departments, and maintained with monthly updates. " +
-        "Includes priority support and a dedicated account manager.",
-      price: "From $500 setup + from $350/month — quoted per business",
-      availability: "Deployment timeline agreed at onboarding, typically 2–3 weeks",
+      name: "Full Chicken Meal",
+      description: "Full flame-grilled chicken with chips and rolls — great for sharing.",
+      price: "From $13.00",
+      availability: "Available during business hours at all branches",
     },
     {
-      name: "Free Demo",
-      description:
-        "A live demo where the prospect sees IVAR working on a real WhatsApp number, " +
-        "configured for their exact business type. No commitment required.",
-      price: "Free",
-      availability: "Book directly with Michael",
+      name: "Family Bucket",
+      description: "Generous family-sized portion of chicken pieces with sides.",
+      price: "From $18.00",
+      availability: "Available during business hours",
+    },
+    {
+      name: "Delivery via LastMile",
+      description: "Order online through chickenhut.co.zw and get it delivered to your door via LastMile.",
+      price: "Delivery fee applies depending on location",
+      availability: "During business hours — Sunday–Thursday 9am–9pm, Friday–Saturday 9am–10pm",
+    },
+    {
+      name: "Takeaway",
+      description: "Order ahead on WhatsApp and collect at your nearest branch — no waiting.",
+      price: "Menu prices apply",
+      availability: "During business hours",
     },
   ],
 
   // ─── FREQUENTLY ASKED QUESTIONS ────────────────────────────────────
   faqs: [
     {
-      question: "What exactly does IVAR do?",
+      question: "How do I place an order?",
       answer:
-        "IVAR is an AI receptionist that lives on your WhatsApp Business number. " +
-        "It responds to every customer message instantly — 24 hours a day, 7 days a week. " +
-        "It answers questions, qualifies leads, handles objections, and when a customer " +
-        "is ready to pay or needs a human, it alerts your team immediately.",
+        "You can order right here on WhatsApp — just tell me what you'd like and your nearest branch or delivery address. " +
+        "I'll get it sorted for you. You can also order online at chickenhut.co.zw for delivery via LastMile.",
     },
     {
-      question: "Do I need to be technical to use IVAR?",
+      question: "Do you deliver?",
       answer:
-        "Not at all. Galvaniq handles the full setup. You give us your business info — " +
-        "products, prices, FAQs, tone — and we configure IVAR to represent you perfectly. " +
-        "You just monitor and step in when IVAR hands over.",
+        "Yes — we deliver through our partnership with LastMile. " +
+        "Order through chickenhut.co.zw or let me know your address and I'll guide you through it.",
     },
     {
-      question: "Will my customers know they are talking to an AI?",
+      question: "What are your opening hours?",
       answer:
-        "IVAR is designed to sound natural and human — most customers don't ask. " +
-        "They just get fast, helpful responses. If someone directly asks, IVAR is honest. " +
-        "Transparency builds trust.",
+        "We're open Sunday to Thursday from 9am to 9pm, and Friday to Saturday from 9am to 10pm.",
     },
     {
-      question: "What happens when a customer wants to pay or needs a human?",
+      question: "Where are your branches?",
       answer:
-        "IVAR detects when a customer is ready to commit or requests a person. " +
-        "It immediately sends a WhatsApp alert and email to the business owner with the customer's number and context. " +
-        "The customer is told the team will be with them shortly — no one is left waiting in silence.",
+        "We have multiple locations across Zimbabwe. Let me know which area you're in and I'll tell you the nearest branch.",
     },
     {
-      question: "Do you serve businesses outside Zimbabwe?",
+      question: "Can I order ahead for pickup?",
       answer:
-        "Yes. We serve English-speaking businesses across Africa — Zimbabwe, South Africa, " +
-        "Zambia, Kenya, Nigeria, Ghana, and more. IVAR works on any WhatsApp Business number globally.",
+        "Absolutely — just tell me your order and preferred branch and we'll have it ready for you to collect. No queuing.",
     },
     {
-      question: "What is the contract length?",
+      question: "Do you cater for events or large orders?",
       answer:
-        "Month to month — no long-term contracts. We earn your business every month. " +
-        "Clients who commit to 3 or 6 months upfront receive a discount — Michael can discuss that.",
+        "Yes we do. For large orders or event catering, let me take your details and our team will get back to you with a quote.",
     },
     {
-      question: "How quickly can IVAR be deployed?",
+      question: "What payment methods do you accept?",
       answer:
-        "Starter deployments are live within 7 days. Professional and Enterprise take 10–21 days. " +
-        "The process starts with a quick onboarding call with Michael.",
+        "We accept USD cash, ZiG, EcoCash, and Zipit at our branches. Online orders go through the website payment system.",
     },
     {
-      question: "What do I need to get started?",
+      question: "I can't register or log in on your website.",
       answer:
-        "A WhatsApp Business account (or we help you set one up), " +
-        "basic info about your business, and the setup fee. That is it.",
-    },
-    {
-      question: "Why would I pay for this instead of just responding myself?",
-      answer:
-        "Because you are already not responding to all of them — no one is. " +
-        "Every unanswered message is a lead that went cold and found a competitor. " +
-        "IVAR recovers that revenue around the clock, even while you sleep. " +
-        "Most clients recover the monthly cost within the first week.",
+        "Sorry about that — our team is aware of the website issue and it's being fixed. " +
+        "In the meantime, you can order directly through WhatsApp right here and I'll sort you out.",
     },
   ],
 
   // ─── IVAR PERSONALITY & TONE ───────────────────────────────────────
   tone: {
-    style: "warm, natural, and human — like a sharp, friendly team member who genuinely cares about helping",
-    language: "Auto-detect",
+    style: "warm, fast, and friendly — like a helpful team member who knows the menu inside out and genuinely wants to get you fed",
+    language: "Auto-detect — respond in whatever language the customer uses",
     responseLength: "concise",
     useEmojis: false,
     name: "IVAR",
@@ -150,41 +130,37 @@ module.exports = {
   // ─── LEAD QUALIFICATION ────────────────────────────────────────────
   qualification: {
     questions: [
-      "What type of business do you run?",
-      "How do most of your customers reach you — WhatsApp, phone, or walk-in?",
-      "On a typical day, roughly how many enquiries do you get that don't get a response fast enough?",
-      "Do you currently have someone dedicated to handling customer messages?",
+      "Which area or branch are you closest to?",
+      "Are you ordering for delivery or collection?",
+      "Is this for yourself or a larger group?",
     ],
     hotLeadSignals: [
-      "how do I sign up", "how do I get started", "I want to try", "I'm interested",
-      "let's do it", "how do I pay", "payment", "invoice", "start today",
-      "setup", "price", "cost", "how much", "ready", "confirm", "book a demo",
-      "send me more info", "I want this",
+      "order", "hungry", "want to order", "can I get", "how much",
+      "deliver", "pickup", "collect", "takeaway", "catering",
+      "book", "large order", "event", "ready to order",
     ],
   },
 
   // ─── HANDOVER TRIGGERS ─────────────────────────────────────────────
   handoverTriggers: [
-    "speak to michael", "speak to a person", "speak to someone", "real person",
-    "human", "founder", "speak to the team", "call me", "not happy",
-    "complaint", "this is wrong", "speak to management", "want to sign",
-    "ready to start", "let's go", "send me an invoice", "send invoice",
+    "speak to someone", "real person", "human", "manager",
+    "complaint", "wrong order", "not happy", "refund",
+    "my order is late", "order never arrived", "speak to the team",
+    "event catering", "large order", "corporate order",
   ],
 
   // ─── HANDOVER MESSAGE ──────────────────────────────────────────────
   handoverMessage:
-    "I'm connecting you with Michael, our Managing Director, right now. He'll be with you shortly. " +
-    "You can also reach him directly on WhatsApp at +263 78 894 6950 if it's urgent.",
+    "Let me connect you with one of our team members right away — they'll sort this out for you immediately.",
 
   // ─── NEGOTIATION GUIDANCE ──────────────────────────────────────────
   negotiation: {
     canOffer:
-      "IVAR can mention that clients committing to 3 or 6 months upfront may receive a discount, " +
-      "but must say Michael can discuss the exact figures. " +
-      "IVAR can also mention the demo is completely free with no obligation.",
+      "IVAR can mention that large or corporate orders may qualify for special pricing — " +
+      "but must say the team will confirm exact figures.",
     cannotOffer:
-      "Never quote a specific discount or reduced price. Only Michael can authorise that. " +
-      "Never promise custom features without Michael confirming.",
+      "Never confirm a discount or special price without team approval. " +
+      "Never promise a delivery time — always say 'our team will confirm your delivery window'.",
   },
 
 };
