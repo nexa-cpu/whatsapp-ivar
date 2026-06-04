@@ -4,17 +4,22 @@ const database = require('../database/mongodb');
 const client = require('../config/client');
 
 /**
+ * IVAR HANDOVER SYSTEM — GALVANIQ GROUP
+ * ─────────────────────────────────────────────────────────────────────
  * Executes the full handover sequence:
- * 1. Alerts the owner via WhatsApp
- * 2. Sends a handover email with context
- * 3. Updates the lead status in MongoDB
+ * 1. Alerts the business owner via WhatsApp
+ * 2. Alerts Michael (Galvaniq operator) via WhatsApp
+ * 3. Sends a handover email with full conversation context
+ * 4. Updates the lead status in MongoDB
+ * ─────────────────────────────────────────────────────────────────────
  */
+
 async function executeHandover({ customerNumber, reason, conversationHistory }) {
   console.log(`🚨 Handover triggered for ${customerNumber} — Reason: ${reason}`);
 
-  // Run WhatsApp alert + email in parallel for speed
   await Promise.allSettled([
     alertOwnerWhatsApp({ customerNumber, reason }),
+    alertGalvaniqOperator({ customerNumber, reason }),
     sendHandoverEmail({ customerNumber, reason, conversationHistory }),
     database.updateLeadStatus(customerNumber, 'handed_over', reason),
   ]);
@@ -23,12 +28,12 @@ async function executeHandover({ customerNumber, reason, conversationHistory }) 
 }
 
 /**
- * Sends a WhatsApp message directly to the business owner
- * with customer context and a quick-reply prompt.
+ * Sends a WhatsApp alert to the business owner (Isaac or whoever
+ * is configured as owner in the client config).
  */
 async function alertOwnerWhatsApp({ customerNumber, reason }) {
-  if (!client.owner.whatsappNumber) {
-    console.log('⚠️  Owner WhatsApp number not set in config — skipping WhatsApp alert');
+  if (!client.owner?.whatsappNumber) {
+    console.log('⚠️  Owner WhatsApp number not set in config — skipping owner alert');
     return;
   }
 
@@ -43,10 +48,35 @@ async function alertOwnerWhatsApp({ customerNumber, reason }) {
 
   try {
     await sendWhatsAppMessage(client.owner.whatsappNumber, message);
-    console.log(`📱 WhatsApp handover alert sent to owner`);
+    console.log(`📱 Handover alert sent to owner (${client.owner.name})`);
   } catch (error) {
     console.error('❌ Owner WhatsApp alert failed:', error.message);
-    // Don't throw — WhatsApp alert failure should not break anything
+  }
+}
+
+/**
+ * Sends a WhatsApp alert to Michael — Galvaniq operator.
+ * Michael receives a copy of every handover across ALL client deployments.
+ * This is hardcoded to Michael's number — it does not change per client.
+ */
+async function alertGalvaniqOperator({ customerNumber, reason }) {
+  const MICHAEL_NUMBER = '263785477620';
+
+  const message =
+    `🔔 *IVAR OPERATOR ALERT*\n` +
+    `─────────────────────────\n` +
+    `Client: ${client.business.name}\n` +
+    `📱 Customer: +${customerNumber}\n` +
+    `📋 Reason: ${reason}\n` +
+    `🕐 Time: ${new Date().toLocaleString('en-ZW', { timeZone: 'Africa/Harare' })}\n` +
+    `─────────────────────────\n` +
+    `Action: Message the customer or alert the client owner.`;
+
+  try {
+    await sendWhatsAppMessage(MICHAEL_NUMBER, message);
+    console.log(`📱 Operator alert sent to Michael`);
+  } catch (error) {
+    console.error('❌ Galvaniq operator alert failed:', error.message);
   }
 }
 
