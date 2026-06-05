@@ -7,29 +7,34 @@ const client = require('../config/client');
 /**
  * IVAR WHATSAPP MESSAGE HANDLER — GALVANIQ GROUP
  * ─────────────────────────────────────────────────────────────────────
- * Processes every incoming WhatsApp message through the full pipeline:
- * 1. Mark message as read (blue ticks)
- * 2. Load conversation history from MongoDB
- * 3. Get AI response from OpenAI
- * 4. Save message + response to MongoDB
+ * Full pipeline per incoming message:
+ * 1. Mark as read (blue ticks)
+ * 2. Load conversation history
+ * 3. Get AI response + handover detection
+ * 4. Save to MongoDB
  * 5. Send reply to customer
- * 6. Execute handover if triggered (alerts owner + Michael + email)
+ * 6. Execute handover if triggered
+ *
+ * HANDOVER LOGIC:
+ * - First handover: sends handover message to customer + alerts owner + Michael
+ * - Subsequent messages with NEW handover triggers: re-alerts owner + Michael
+ *   but does NOT resend the handover message to customer (avoids spam)
+ * - Already handed over but no new trigger: IVAR keeps conversation warm silently
  * ─────────────────────────────────────────────────────────────────────
  */
 
 async function processMessage(from, messageText, messageId) {
   console.log(`\n🔄 Processing message from ${from}: "${messageText}"`);
 
-  // Mark as read immediately — customer sees blue ticks
+  // Mark as read — blue ticks for customer
   await markAsRead(messageId);
 
   try {
-    // Load lead status and full conversation history
     const lead = await database.getLeadFull(from);
     const status = lead?.status || 'new';
     const conversationHistory = await database.getConversationHistory(from);
 
-    // Get AI response — includes handover detection + bulk order safety net
+    // Get AI response with handover detection + safety net
     const { reply, handover, handoverReason } = await getResponse(messageText, conversationHistory);
 
     console.log(`🤖 IVAR: "${reply}"`);
@@ -43,37 +48,47 @@ async function processMessage(from, messageText, messageId) {
       handoverTriggered: handover,
     });
 
-    // Send IVAR's reply to customer
+    // Send IVAR reply to customer
     await sendWhatsAppMessage(from, reply);
 
-    // Fire handover sequence — but only once per lead
-    // IVAR keeps conversation warm after handover; Michael/owner already alerted
-    if (handover && handoverReason && status !== 'handed_over') {
+    if (handover && handoverReason) {
 
-      // Send the client-configured handover message to customer
-      await sendWhatsAppMessage(from, client.handoverMessage);
+      if (status !== 'handed_over') {
+        // FIRST handover — send customer the handover message + full alert sequence
+        console.log(`🚨 First handover for ${from} — full sequence`);
+        await sendWhatsAppMessage(from, client.handoverMessage);
+        await executeHandover({
+          customerNumber: from,
+          reason: handoverReason,
+          conversationHistory: [
+            ...conversationHistory,
+            { userMessage: messageText, aiResponse: reply },
+          ],
+        });
 
-      // Execute full handover: alert owner, alert Michael, send email, update DB
-      await executeHandover({
-        customerNumber: from,
-        reason: handoverReason,
-        conversationHistory: [
-          ...conversationHistory,
-          { userMessage: messageText, aiResponse: reply },
-        ],
-      });
+      } else {
+        // ALREADY handed over but customer sent another buying signal
+        // Re-alert owner + Michael — do NOT resend handover message to customer
+        console.log(`🔁 Re-alert for already handed over lead ${from} — new signal detected`);
+        await executeHandover({
+          customerNumber: from,
+          reason: `FOLLOW-UP SIGNAL — ${handoverReason}`,
+          conversationHistory: [
+            ...conversationHistory,
+            { userMessage: messageText, aiResponse: reply },
+          ],
+        });
+      }
     }
 
     console.log(`✅ Pipeline complete for ${from}\n`);
 
   } catch (error) {
     console.error(`❌ Pipeline error for ${from}:`, error.message);
-
-    // Graceful error message to customer — never show a raw error
     try {
       await sendWhatsAppMessage(
         from,
-        "Sorry, having a quick technical hiccup on my end. Try again in a moment — or reach us directly on +263 77 407 8220."
+        "Sorry, having a quick technical hiccup. Try again in a moment — or reach us directly on +263 77 407 8220."
       );
     } catch (sendError) {
       console.error('❌ Failed to send error message:', sendError.message);
