@@ -1,14 +1,22 @@
 /**
  * IVAR CLIENT CONFIGURATION — GALVANIQ GROUP
  * ─────────────────────────────────────────────────────────────────────
- * Client: Zacks Electronics (Private) Limited
- * CEO: Isaac Madziro
- * Package: IVAR Professional — $400/month + $750 setup
- * Location: Shop 2, Advanx Building, Corner 1st Street & George Silundika Ave, Harare
- * Website: zackselectronics.co.zw
- * WhatsApp: +263 77 982 0009
- * Phone: +263 242 755 280
- * Email: sales@zackselectronics.co.zw
+ * Client:        Avantis Technologies Ltd
+ * GM:            Samantha Chapeta
+ * IT Lead:       Denzel (surname TBC)
+ * Package:       IVAR Professional — $400/month + $750 setup
+ * Head Office:   91 Aloe Way & Lomagundi Road, Avondale, Harare, Zimbabwe
+ * Manufacturing: Msasa Factory, Harare (Microsoft Certified) + Mainland China
+ * Phone:         +263 242 304 643
+ * WhatsApp:      +263 774 516 917 (Samantha)
+ * Email:         avantiszimbabwe@aol.com
+ * Website:       avantis.co.zw
+ * Founded:       September 16, 2016
+ * ─────────────────────────────────────────────────────────────────────
+ * NOTE: This is NOT a WhatsApp receptionist.
+ * IVAR is deployed as an intelligent internal + external operations system
+ * connected across Sales, Customer Support, Manufacturing Enquiries,
+ * Corporate/Government Procurement, Distribution, and Marketing departments.
  * ─────────────────────────────────────────────────────────────────────
  */
 
@@ -16,480 +24,84 @@ module.exports = {
 
   // ─── BUSINESS IDENTITY ─────────────────────────────────────────────
   business: {
-    name: "Zacks Electronics",
-    industry: "ICT / Electronics Retail & Distribution",
-    location: "Shop 2, Advanx Building, Corner 1st Street & George Silundika Ave, Harare CBD, Zimbabwe",
+    name: "Avantis Technologies",
+    legalName: "Avantis Technologies Ltd",
+    tagline: "The Computer Manufacturing Company in Zimbabwe",
+    founded: "September 16, 2016",
     description:
-      "Zacks Electronics is Zimbabwe's leading ICT and electronics company, " +
-      "specialising in the supply and distribution of premium electronics — " +
-      "laptops, smartphones, printers, networking equipment, cameras, smart watches, " +
-      "audio devices, power backup solutions, and accessories. " +
-      "Founded in 2012, Zacks serves individuals, businesses, and government agencies " +
-      "with a reputation for quality, warranty, and fast delivery. " +
-      "We carry top global brands including HP, Lenovo, Dell, Samsung, Apple, Asus, " +
-      "Acer, TP-Link, Logitech, Xiaomi, JBL, DJI, WiWU, Soundcore, and oraimo. " +
-      "Online quotations available at zackselectronics.co.zw. Delivery across Harare.",
-    website: "zackselectronics.co.zw",
-    workingHours: "Monday to Friday: 8am – 5pm | Saturday: 8am – 1pm | Sunday: Closed",
+      "Avantis Technologies is Zimbabwe's leading computer hardware manufacturer, " +
+      "specialising in the design, manufacturing, and local assembly of laptops, desktops, tablets, " +
+      "sound devices, and accessories. " +
+      "With an annual production capacity of 48,000 to 315,000 units, Avantis powers its devices " +
+      "with industry-standard Intel processors and operates a Microsoft-certified factory in Msasa, Harare. " +
+      "80% of products are exported globally — with distribution hubs in Uganda, South Africa, " +
+      "the Netherlands, and China. " +
+      "Avantis operates across Zimbabwe, South Africa, Angola, Kenya, Mozambique, and Uganda, " +
+      "and is preparing for a VFEX stock exchange listing in 2026.",
+    vision: "To be the first choice of ICT provider in Africa and the world.",
+    mission:
+      "To enhance the 4th Industrial Revolution through affordable devices to every household " +
+      "in Africa, Latin America, and the world via world-class, research-based innovations.",
+    coreValues: ["Innovation", "Responsibility", "Customer Service", "Fun"],
+    website: "avantis.co.zw",
+    email: "avantiszimbabwe@aol.com",
+    workingHours: "Monday to Friday: 8am – 5pm | Saturday: By appointment | Sunday: Closed",
     currency: "USD",
+    socialMedia: {
+      facebook: "avantistech",
+      instagram: "avantistech",
+      twitter: "avantis_tech",
+    },
   },
 
-  // ─── OWNER / ESCALATION CONTACT ────────────────────────────────────
-  owner: {
-    name: "Isaac",
-    whatsappNumber: "263774078220",
-    email: "ceo@galvaniqgroup.co.zw",
-    backupEmail: "sales@zackselectronics.co.zw",
-    directLine: "+263 774 078 220",
+  // ─── LOCATIONS ─────────────────────────────────────────────────────
+  locations: {
+    headOffice: {
+      label: "Head Office",
+      address: "91 Aloe Way & Lomagundi Road, Avondale, Harare, Zimbabwe",
+      phone: "+263 242 304 643",
+      whatsapp: "+263 774 516 917",
+      email: "avantiszimbabwe@aol.com",
+    },
+    manufacturing: [
+      {
+        label: "Msasa Factory — Harare",
+        note: "Microsoft Certified manufacturing facility. Primary local assembly and production.",
+      },
+      {
+        label: "Manufacturing Partner — Mainland China",
+        note: "Offshore manufacturing for volume production and component supply.",
+      },
+    ],
+    distributionHubs: [
+      "Uganda",
+      "South Africa",
+      "The Netherlands",
+      "China",
+    ],
+    activeMarkets: [
+      "Zimbabwe (20% of units — local market)",
+      "South Africa",
+      "Angola",
+      "Kenya",
+      "Mozambique",
+      "Uganda",
+      "Global export (80% of total production)",
+    ],
   },
 
-  // ─── PRODUCTS / SERVICES ───────────────────────────────────────────
-  offerings: [
-
-    // ── LAPTOPS ──
-    {
-      name: "HP ProBook 450 G10",
-      description: "Professional business laptop. Intel Core i5, 8GB RAM, 256GB SSD, 15.6\" FHD display. Perfect for office work and professionals.",
-      price: "$320",
-      availability: "In stock",
-    },
-    {
-      name: "HP ProBook 450 G9",
-      description: "Previous generation ProBook — reliable workhorse for business. Core i5, 8GB RAM, 256GB SSD.",
-      price: "$280",
-      availability: "In stock",
-    },
-    {
-      name: "HP 15s",
-      description: "Entry-level everyday laptop ideal for students and home users. Core i3, 4GB RAM, 256GB SSD.",
-      price: "$250",
-      availability: "In stock",
-    },
-    {
-      name: "HP EliteBook 840 G9",
-      description: "Premium business ultrabook. Lightweight, durable, Core i7, 16GB RAM, 512GB SSD. Built for executives.",
-      price: "$580",
-      availability: "In stock",
-    },
-    {
-      name: "Lenovo IdeaPad 5 Pro",
-      description: "High-performance laptop with stunning display. AMD Ryzen 7, 16GB RAM, 512GB SSD, 16\" 2K display.",
-      price: "$520",
-      availability: "In stock",
-    },
-    {
-      name: "Lenovo ThinkPad E14",
-      description: "Business-grade ThinkPad known for durability and keyboard quality. Core i5, 8GB RAM, 256GB SSD.",
-      price: "$390",
-      availability: "In stock",
-    },
-    {
-      name: "Lenovo IdeaPad 3",
-      description: "Budget-friendly student and home laptop. AMD Ryzen 5, 8GB RAM, 256GB SSD.",
-      price: "$270",
-      availability: "In stock",
-    },
-    {
-      name: "Dell Inspiron 15",
-      description: "Reliable all-rounder for work and home. Core i5, 8GB RAM, 512GB SSD, 15.6\" FHD.",
-      price: "$380",
-      availability: "In stock",
-    },
-    {
-      name: "Dell Latitude 5530",
-      description: "Corporate-grade Dell business laptop. Core i5 12th Gen, 8GB RAM, 256GB SSD. Ideal for enterprise procurement.",
-      price: "$480",
-      availability: "In stock",
-    },
-    {
-      name: "Asus VivoBook 15",
-      description: "Slim, lightweight laptop for everyday tasks. Core i5, 8GB RAM, 512GB SSD.",
-      price: "$340",
-      availability: "In stock",
-    },
-    {
-      name: "Acer Aspire 5",
-      description: "Value-for-money laptop for students and small business. AMD Ryzen 5, 8GB RAM, 256GB SSD.",
-      price: "$290",
-      availability: "In stock",
-    },
-    {
-      name: "Gaming Laptops",
-      description: "High-performance gaming laptops from ASUS ROG and Lenovo Legion. Dedicated GPU, high refresh rate displays.",
-      price: "From $750 — request specific model quote",
-      availability: "Available on order — contact team",
-    },
-
-    // ── SMARTPHONES ──
-    {
-      name: "iPhone 16 Pro Max",
-      description: "Apple's latest flagship. 6.9\" Super Retina display, A18 Pro chip, titanium build, 48MP camera system.",
-      price: "$1,500+",
-      availability: "In stock — limited units",
-    },
-    {
-      name: "iPhone 15 Pro Max",
-      description: "Previous Apple flagship. A17 Pro chip, 48MP ProRAW camera, USB-C, titanium frame.",
-      price: "$1,200",
-      availability: "In stock",
-    },
-    {
-      name: "iPhone 14 Pro Max",
-      description: "Excellent condition Apple flagship. Dynamic Island, 48MP camera, A16 Bionic chip.",
-      price: "$950",
-      availability: "In stock",
-    },
-    {
-      name: "iPhone 14",
-      description: "Standard iPhone 14. A15 Bionic, 6.1\" display, dual 12MP cameras. Great value Apple experience.",
-      price: "$650",
-      availability: "In stock",
-    },
-    {
-      name: "Samsung Galaxy S24 Ultra",
-      description: "Samsung's top Android flagship. S Pen included, 200MP camera, Snapdragon 8 Gen 3, titanium frame.",
-      price: "$1,300",
-      availability: "In stock",
-    },
-    {
-      name: "Samsung Galaxy S24",
-      description: "Compact Samsung flagship. Snapdragon 8 Gen 3, 50MP camera, 6.2\" AMOLED.",
-      price: "$800",
-      availability: "In stock",
-    },
-    {
-      name: "Samsung Galaxy A55",
-      description: "Mid-range Samsung with flagship features. 50MP camera, 6.6\" AMOLED, 5000mAh battery.",
-      price: "$380",
-      availability: "In stock",
-    },
-    {
-      name: "Samsung Galaxy A35",
-      description: "Affordable Samsung with great camera. 50MP, 6.6\" AMOLED, 5000mAh battery.",
-      price: "$280",
-      availability: "In stock",
-    },
-    {
-      name: "Xiaomi Redmi Note 13 Pro",
-      description: "Feature-packed mid-range. 200MP camera, 6.67\" AMOLED, 67W fast charging.",
-      price: "$280",
-      availability: "In stock",
-    },
-    {
-      name: "Xiaomi Redmi 15C",
-      description: "Entry-level smartphone with solid battery and performance. Great for budget buyers.",
-      price: "$120",
-      availability: "In stock",
-    },
-    {
-      name: "Xiaomi 14",
-      description: "Xiaomi's flagship with Leica cameras. Snapdragon 8 Gen 3, 50MP triple camera system.",
-      price: "$750",
-      availability: "In stock",
-    },
-
-    // ── PRINTERS ──
-    {
-      name: "HP Smart Tank 581",
-      description: "All-in-one ink tank printer — print, scan, copy. Wireless, borderless printing. Low cost per page.",
-      price: "$180",
-      availability: "In stock",
-    },
-    {
-      name: "HP Smart Tank Plus 551",
-      description: "Wireless ink tank printer with high-yield tanks. Ideal for home and small office.",
-      price: "$160",
-      availability: "In stock",
-    },
-    {
-      name: "HP DeskJet 2700",
-      description: "Compact wireless inkjet printer for basic home printing. Print, scan, copy.",
-      price: "$90",
-      availability: "In stock",
-    },
-    {
-      name: "HP LaserJet Pro M15w",
-      description: "Compact wireless laser printer. Fast black and white printing. Ideal for office documents.",
-      price: "$150",
-      availability: "In stock",
-    },
-    {
-      name: "HP Color LaserJet Pro MFP M283fdw",
-      description: "Professional colour laser all-in-one. Print, scan, copy, fax. High speed, high quality output.",
-      price: "$420",
-      availability: "In stock",
-    },
-    {
-      name: "Epson EcoTank L3250",
-      description: "Wireless all-in-one ink tank printer. Ultra-low cost per page. Print, scan, copy.",
-      price: "$170",
-      availability: "In stock",
-    },
-
-    // ── NETWORKING ──
-    {
-      name: "TP-Link Archer AX55 Wi-Fi 6 Router",
-      description: "Dual-band Wi-Fi 6 router. AX3000 speeds. Ideal for home and small office.",
-      price: "$85",
-      availability: "In stock",
-    },
-    {
-      name: "TP-Link TL-SG108 8-Port Gigabit Switch",
-      description: "Unmanaged 8-port gigabit switch for office networking. Plug and play.",
-      price: "$35",
-      availability: "In stock",
-    },
-    {
-      name: "TP-Link TL-WR940N Router",
-      description: "Budget wireless N router for home use. Reliable and easy to set up.",
-      price: "$25",
-      availability: "In stock",
-    },
-    {
-      name: "TP-Link Deco M4 Mesh Wi-Fi System",
-      description: "Whole-home mesh Wi-Fi. Eliminates dead zones. Pack of 2 covers up to 260m².",
-      price: "$120",
-      availability: "In stock",
-    },
-    {
-      name: "Enterprise Networking Solutions",
-      description: "Managed switches, firewalls, enterprise access points, and structured cabling for offices and businesses. Custom solutions available.",
-      price: "Quoted per requirement — contact team",
-      availability: "Available on order",
-    },
-
-    // ── AUDIO ──
-    {
-      name: "JBL Charge 5 Bluetooth Speaker",
-      description: "Portable waterproof speaker. 20 hours playtime, powerful bass, power bank function.",
-      price: "$150",
-      availability: "In stock",
-    },
-    {
-      name: "JBL Flip 7",
-      description: "Compact waterproof Bluetooth speaker. Rich sound, 12 hours playtime.",
-      price: "$120",
-      availability: "In stock",
-    },
-    {
-      name: "JBL Tour Pro 3",
-      description: "Premium true wireless earbuds with smart charging case display. Active noise cancellation.",
-      price: "$180",
-      availability: "In stock",
-    },
-    {
-      name: "JBL Tune 770NC",
-      description: "Over-ear wireless headphones with active noise cancellation. 70 hours battery.",
-      price: "$95",
-      availability: "In stock",
-    },
-    {
-      name: "WiWU T33 ANC Pro Earbuds",
-      description: "True wireless earbuds with active noise cancellation. Premium sound at an accessible price.",
-      price: "$55",
-      availability: "In stock",
-    },
-    {
-      name: "Soundcore V40i Open-Ear Pods",
-      description: "Open-ear wireless earbuds. Comfortable for all-day wear. Great for calls and music.",
-      price: "$45",
-      availability: "In stock",
-    },
-    {
-      name: "oraimo BoomPop Pro Headphones",
-      description: "Over-ear wireless headphones. Deep bass, 40 hours battery, foldable design.",
-      price: "$40",
-      availability: "In stock",
-    },
-
-    // ── SMART WATCHES ──
-    {
-      name: "WiWU SW01 Ultra Lite Smart Watch",
-      description: "Sleek smartwatch with health tracking, notifications, and multi-sport modes. Lightweight design.",
-      price: "$45",
-      availability: "In stock",
-    },
-    {
-      name: "WiWU SW08 Smart Watch",
-      description: "Feature-rich smartwatch. Large display, health monitoring, call notifications, 7-day battery.",
-      price: "$55",
-      availability: "In stock",
-    },
-    {
-      name: "Samsung Galaxy Watch 6",
-      description: "Premium Android smartwatch. Health sensors, sleep tracking, NFC payments, rotating bezel.",
-      price: "$280",
-      availability: "In stock",
-    },
-
-    // ── CAMERAS & STABILIZERS ──
-    {
-      name: "DJI RS4 Mini Gimbal Stabilizer",
-      description: "Lightweight 3-axis gimbal for smartphones and mirrorless cameras. Perfect for content creators and videographers.",
-      price: "$180",
-      availability: "In stock",
-    },
-    {
-      name: "DJI Osmo Mobile 6",
-      description: "Smartphone gimbal stabilizer with built-in extension rod. AI tracking, ActiveTrack 6.0.",
-      price: "$120",
-      availability: "In stock",
-    },
-
-    // ── MICROPHONES ──
-    {
-      name: "WiWU WI-WM008 Dual Wireless Lavalier",
-      description: "Dual wireless lapel microphone system for phones and cameras. Plug-and-play, no app needed.",
-      price: "$75",
-      availability: "In stock",
-    },
-    {
-      name: "WiWU WI-WM006 AI Noise Cancelling Mic",
-      description: "AI-powered noise cancelling wireless microphone. Eliminates background noise automatically. Ideal for content creators and presenters.",
-      price: "$85",
-      availability: "In stock",
-    },
-
-    // ── POWER BACKUP ──
-    {
-      name: "APC UPS 650VA",
-      description: "Uninterruptible power supply for desktop PCs and networking equipment. Protects against outages and surges.",
-      price: "$80",
-      availability: "In stock",
-    },
-    {
-      name: "APC UPS 1500VA",
-      description: "Higher capacity UPS for workstations and servers. Extended runtime during load-shedding.",
-      price: "$180",
-      availability: "In stock",
-    },
-    {
-      name: "Power Banks",
-      description: "Portable power banks from 10,000mAh to 30,000mAh. Fast charging, multiple ports. Brands include Xiaomi, Anker, and WiWU.",
-      price: "From $20",
-      availability: "In stock",
-    },
-    {
-      name: "Solar Inverter Systems",
-      description: "Home and office solar inverter solutions for load-shedding. Various capacity options available.",
-      price: "Quoted per requirement — contact team",
-      availability: "Available on order",
-    },
-
-    // ── ACCESSORIES ──
-    {
-      name: "Laptop Bags and Backpacks",
-      description: "Professional and casual laptop bags for 14\" and 15.6\" laptops. Various styles available.",
-      price: "From $15",
-      availability: "In stock",
-    },
-    {
-      name: "Wireless Keyboards and Mice",
-      description: "Logitech and generic wireless keyboard and mouse combos. For office and home use.",
-      price: "From $20",
-      availability: "In stock",
-    },
-    {
-      name: "External Storage — Hard Drives and SSDs",
-      description: "External hard drives (1TB, 2TB) and portable SSDs for backup and storage. Brands include Seagate and WD.",
-      price: "From $45 for 1TB HDD — SSDs from $70",
-      availability: "In stock",
-    },
-    {
-      name: "USB Flash Drives",
-      description: "USB flash drives from 16GB to 256GB. Branded and unbranded options available.",
-      price: "From $5",
-      availability: "In stock",
-    },
-    {
-      name: "Cables and Adapters",
-      description: "USB-C, HDMI, DisplayPort, Lightning, and multi-port adapters. All types and lengths.",
-      price: "From $3",
-      availability: "In stock",
-    },
-    {
-      name: "Laptop Chargers",
-      description: "Replacement chargers for HP, Lenovo, Dell, Asus, and Acer laptops.",
-      price: "From $25 depending on model",
-      availability: "In stock",
-    },
-    {
-      name: "Screen Protectors and Phone Cases",
-      description: "Tempered glass screen protectors and protective cases for major phone models.",
-      price: "From $5",
-      availability: "In stock",
-    },
-    {
-      name: "Monitors",
-      description: "Full HD and 4K monitors from 21\" to 27\". Brands include HP, Dell, and LG. For office and home.",
-      price: "From $120 for 21\" FHD — 4K from $350",
-      availability: "In stock",
-    },
-
-    // ── CORPORATE & GOVERNMENT ──
-    {
-      name: "Corporate and Bulk Procurement",
-      description:
-        "Zacks serves government agencies and private companies with bulk procurement, " +
-        "corporate pricing, volume discounts, and after-sales support packages. " +
-        "We supply laptops, desktops, printers, networking infrastructure, and full ICT fit-outs. " +
-        "Contact Isaac directly for corporate quotations.",
-      price: "Custom pricing — contact team for quotation",
-      availability: "Available by arrangement",
-    },
-    {
-      name: "Online Quotation System",
-      description:
-        "Browse all products and request quotations at zackselectronics.co.zw. " +
-        "Add items to your quotation cart and submit — team responds with pricing and availability.",
-      price: "Free",
-      availability: "24/7 on website",
-    },
-    {
-      name: "Delivery Service",
-      description: "Zacks delivers across Harare. Order via WhatsApp or website.",
-      price: "Delivery fee applies — confirm with team",
-      availability: "During business hours",
-    },
-  ],
-
-  // ─── FREQUENTLY ASKED QUESTIONS ────────────────────────────────────
-  faqs: [
-    {
-      question: "Where are you located?",
-      answer:
-        "Shop 2, Advanx Building, Corner 1st Street and George Silundika Avenue, Harare CBD. " +
-        "Easy to find in the city centre.",
-    },
-    {
-      question: "What are your business hours?",
-      answer: "Monday to Friday 8am to 5pm, Saturday 8am to 1pm. Closed Sundays.",
-    },
-    {
-      question: "Do you deliver?",
-      answer:
-        "Yes — we deliver across Harare. Order via WhatsApp or our website and we'll sort delivery to you. " +
-        "Delivery fee depends on location.",
-    },
-    {
-      question: "Do your products come with warranty?",
-      answer:
-        "All our products come with manufacturer warranty. " +
-        "Warranty periods vary by product — ask about the specific item you're interested in.",
-    },
-    {
-      question: "Are your products genuine?",
-      answer:
-        "100% genuine from authorised suppliers. We do not sell imitations or grey market products.",
-    },
-    {
-      question: "Can I get a quotation?",
-      answer:
-        "Two ways — browse zackselectronics.co.zw and use the online quotation system, " +
-        "or tell me what you need right here and I'll help you build the right solution.",
-    },
-    {
-      question: "Do you offer corporate or bulk pricing?",
+  // ─── KEY CONTACTS ──────────────────────────────────────────────────
+  keyContacts: {
+    generalManager: {
+      name: "Samantha Chapeta",
+      role: "General Manager",
+      whatsapp: "+263 774 516 917",
+      email: "sammy.chapeta@avantis.co.zw",
+      note: "Primary decision maker for operational and technology partnerships.",
+    },
+    itLead: {
+      name: "Denzel",
+      role: "IT Lead",
       answer:
         "Yes — we serve government agencies and companies with corporate pricing and volume discounts. " +
         "Tell me about your organisation's requirements and our team will get you a tailored quote.",
@@ -518,95 +130,420 @@ module.exports = {
     {
       question: "How do I track my order?",
       answer:
-        "Share your order details and I'll connect you with our sales team for an update.",
+        "Share your order
+      note: "Technical evaluator for IVAR deployment. Reports to Samantha.",
+    },
+  },
+
+  // ─── PRODUCTS & OFFERINGS ──────────────────────────────────────────
+  offerings: [
+
+    // ── LAPTOPS ──
+    {
+      category: "Laptops",
+      description: "Avantis-manufactured laptops powered by Intel processors. Engineered for performance, durability, and affordability.",
+      products: [
+        {
+          name: "Avantis P1 NoteBook",
+          description: "Entry-level Avantis laptop. Slim design, Intel processor, ideal for education and home use.",
+          price: "$350",
+          availability: "In stock",
+        },
+        {
+          name: "Avantis P2 NoteBook",
+          description: "Mid-range NoteBook with balanced performance for work and study.",
+          price: "$350",
+          availability: "In stock",
+        },
+        {
+          name: "Avantis P3 NoteBook",
+          description: "Professional NoteBook with enhanced performance. Ideal for business and enterprise use.",
+          price: "$390",
+          availability: "In stock",
+        },
+        {
+          name: "Avantis P4 NoteBook",
+          description: "Advanced NoteBook with high-efficiency Intel processor. For professionals and power users.",
+          price: "$389",
+          availability: "In stock",
+        },
+        {
+          name: "Avantis 15.6\" Intel Core i7 NoteBook",
+          description: "High-performance 15.6-inch laptop. Intel Core i7, 8GB RAM. For demanding workloads, creative work, and enterprise deployment.",
+          price: "$550",
+          availability: "In stock",
+        },
+        {
+          name: "Avantis Parote 1030i",
+          description: "Zimbabwe's first locally assembled laptop — unveiled May 2026. Represents Avantis' flagship locally assembled product line.",
+          price: "Contact sales for pricing",
+          availability: "New launch — contact sales team",
+          note: "Flagship product. Key talking point for government and corporate procurement conversations.",
+        },
+      ],
+    },
+
+    // ── DESKTOPS ──
+    {
+      category: "Desktops",
+      description: "Avantis desktop computers for office, education, and enterprise. Available for bulk and corporate procurement.",
+      products: [
+        {
+          name: "Avantis Desktop Range",
+          description: "Intel-powered desktop computers for office and institutional use. Suitable for schools, government, and corporate environments.",
+          price: "Contact sales for configuration and pricing",
+          availability: "Available — contact sales for spec and quote",
+        },
+      ],
+    },
+
+    // ── SOUND ──
+    {
+      category: "Sound Devices",
+      description: "Avantis audio products including speakers and sound accessories.",
+      products: [
+        {
+          name: "Avantis Sound Range",
+          description: "Sound devices designed for home, education, and office environments.",
+          price: "Contact sales for pricing",
+          availability: "In stock — visit website or contact team",
+        },
+      ],
+    },
+
+    // ── ACCESSORIES ──
+    {
+      category: "Accessories",
+      description: "Avantis accessories including bags, adapters, peripherals, and device add-ons.",
+      products: [
+        {
+          name: "Avantis Accessories Range",
+          description: "Laptop bags, adapters, cables, and peripherals compatible with Avantis and standard devices.",
+          price: "From $5 — varies by product",
+          availability: "In stock",
+        },
+      ],
+    },
+
+    // ── SOFTWARE & DIGITAL ──
+    {
+      category: "Software & Digital Solutions",
+      description: "Custom enterprise software and digital solutions developed by Avantis.",
+      products: [
+        {
+          name: "Custom Software Development",
+          description: "Enterprise and custom application development. Tailored for education, SME, and government clients.",
+          price: "Quoted per requirement",
+          availability: "Available by engagement — contact Samantha",
+        },
+        {
+          name: "Cloud Computing Services",
+          description: "Robust cloud infrastructure and data security services for organisations.",
+          price: "Quoted per requirement",
+          availability: "Contact sales",
+        },
+        {
+          name: "Digital Learning / E-Learning Solutions",
+          description: "Specialised e-learning applications for schools, training institutions, and education ministries.",
+          price: "Quoted per requirement",
+          availability: "Contact sales",
+        },
+      ],
+    },
+
+    // ── CORPORATE & GOVERNMENT ──
+    {
+      category: "Corporate & Government Procurement",
+      description: "Avantis serves government agencies, parastatals, NGOs, and corporations with bulk hardware procurement, ICT fit-outs, and after-sales support.",
+      products: [
+        {
+          name: "Bulk Laptop & Desktop Procurement",
+          description:
+            "Volume supply of Avantis laptops and desktops for schools, government ministries, corporates, and NGOs. " +
+            "Custom configurations available. Competitive pricing for bulk orders.",
+          price: "Custom pricing — contact Samantha or sales team",
+          availability: "Available — minimum order quantities apply",
+        },
+        {
+          name: "ICT Infrastructure Supply",
+          description: "Full ICT fit-out supply including hardware, peripherals, accessories, and installation support for offices and institutions.",
+          price: "Quoted per project",
+          availability: "Available by arrangement",
+        },
+        {
+          name: "Education Sector Supply",
+          description:
+            "Laptops, desktops, and e-learning solutions for primary schools, secondary schools, colleges, and universities. " +
+            "Avantis has specific focus on making devices accessible to every African household — education is a primary market.",
+          price: "Subsidised pricing available for qualifying institutions — contact sales",
+          availability: "Available — contact Samantha for education procurement pricing",
+        },
+      ],
     },
   ],
+
+  // ─── DEPARTMENTS — IVAR INTEGRATION MAP ───────────────────────────
+  // IVAR is connected to all departments. Each department has defined
+  // intents, triggers, and handover logic.
+  departments: {
+
+    sales: {
+      label: "Sales Department",
+      description: "Handles product enquiries, quotations, order processing, and customer conversions.",
+      ivarRole:
+        "IVAR qualifies inbound sales leads, answers product and pricing questions, " +
+        "captures customer details and requirements, and routes hot leads to the sales team. " +
+        "For bulk and corporate orders, IVAR collects full requirement specs before handover.",
+      handoverTriggers: [
+        "quotation", "quote", "how much", "price", "bulk order", "corporate order",
+        "government tender", "want to buy", "purchase", "order", "ready to pay",
+        "invoice", "pro forma", "can I get", "units", "pieces", "quantity",
+        "volume discount", "minimum order", "delivery", "when can I receive",
+        "in stock", "do you have", "available", "reseller", "distributor",
+        "partner pricing", "export order",
+      ],
+      escalationContact: "Samantha Chapeta — sammy.chapeta@avantis.co.zw | +263 774 516 917",
+    },
+
+    customerSupport: {
+      label: "Customer Support Department",
+      description: "Handles post-sale support, warranty claims, product issues, repairs, and customer satisfaction.",
+      ivarRole:
+        "IVAR handles initial support triage — identifying the issue, collecting device details, " +
+        "and routing to the appropriate support channel. " +
+        "For warranty claims, IVAR collects proof of purchase and device details before handover. " +
+        "For technical issues, IVAR attempts first-level resolution using known FAQs and manuals.",
+      handoverTriggers: [
+        "not working", "broken", "warranty", "warranty claim", "repair", "fault",
+        "screen", "battery", "won't turn on", "slow", "crashed", "damaged",
+        "return", "exchange", "refund", "after sales", "support", "help with my device",
+        "technical issue", "product manual", "how to", "setup help",
+      ],
+      escalationContact: "Customer Support Team — avantiszimbabwe@aol.com | +263 242 304 643",
+      productManuals: "avantis.co.zw/product-manuals/",
+      productSupport: "avantis.co.zw/product-support/",
+    },
+
+    manufacturing: {
+      label: "Manufacturing & Production",
+      description: "Manages production at Msasa factory (Harare) and China partner facility. Handles production enquiries and capacity questions.",
+      ivarRole:
+        "IVAR handles inbound manufacturing partnership enquiries, component sourcing questions, " +
+        "OEM/ODM requests, and production capacity questions. " +
+        "IVAR does not confirm production schedules or capacity details — routes to management.",
+      handoverTriggers: [
+        "factory", "manufacturing", "production", "OEM", "ODM", "custom build",
+        "component", "assembly", "Msasa", "Microsoft certified", "production capacity",
+        "partnership", "supply chain", "white label", "custom hardware",
+      ],
+      note: "Msasa factory is Microsoft certified. China facility handles volume production.",
+      escalationContact: "Management — route via Samantha Chapeta",
+    },
+
+    corporatePartnerships: {
+      label: "Corporate & Government Partnerships",
+      description: "Manages B2G and B2B relationships, tenders, government procurement, and strategic partnerships.",
+      ivarRole:
+        "IVAR handles initial partnership and tender enquiries, captures organisation details, " +
+        "and routes serious prospects to Samantha. " +
+        "For government and NGO enquiries, IVAR collects: organisation name, contact person, " +
+        "procurement requirement, quantity estimate, and timeline.",
+      handoverTriggers: [
+        "government", "ministry", "parastatal", "NGO", "tender", "RFQ", "RFP",
+        "procurement", "ZITF", "VFEX", "investor", "partnership", "MOU",
+        "strategic alliance", "distribution agreement", "reseller", "agent",
+        "SADC", "export", "international", "wholesale",
+      ],
+      escalationContact: "Samantha Chapeta — sammy.chapeta@avantis.co.zw | +263 774 516 917",
+    },
+
+    distribution: {
+      label: "Distribution & Logistics",
+      description: "Manages order fulfilment, delivery, export logistics, and distribution hub coordination.",
+      ivarRole:
+        "IVAR handles order tracking enquiries, delivery status questions, export documentation requests, " +
+        "and distribution hub contacts. " +
+        "Routes complex logistics queries to the operations team.",
+      distributionHubs: {
+        Uganda: "Contact sales team for Uganda hub details",
+        SouthAfrica: "Contact sales team for SA hub details",
+        Netherlands: "Contact sales team for EU distribution details",
+        China: "Contact sales team for China sourcing details",
+      },
+      handoverTriggers: [
+        "delivery", "shipping", "order status", "tracking", "export",
+        "logistics", "freight", "customs", "clearance", "dispatch",
+        "Uganda hub", "South Africa", "Netherlands", "China order",
+        "when will it arrive", "where is my order",
+      ],
+      escalationContact: "Operations — route via Samantha Chapeta or avantiszimbabwe@aol.com",
+    },
+
+    investorRelations: {
+      label: "Investor Relations",
+      description: "Manages VFEX listing preparation, investor communications, and financial disclosures.",
+      ivarRole:
+        "IVAR handles initial investor enquiries, directs to investor relations page, " +
+        "and routes serious investor contacts to Samantha for management escalation. " +
+        "IVAR does not share financial data or confirm VFEX listing details — directs to official channels.",
+      investorPage: "avantis.co.zw/investor-relations/",
+      handoverTriggers: [
+        "investor", "investment", "shares", "VFEX", "listing", "equity",
+        "shareholder", "annual report", "financials", "valuation", "IPO",
+        "stake", "fund", "capital raise",
+      ],
+      escalationContact: "Management — route via Samantha Chapeta",
+    },
+
+    marketing: {
+      label: "Marketing & Communications",
+      description: "Manages brand communications, press releases, promotions, sponsorships, and social media.",
+      ivarRole:
+        "IVAR handles media enquiries, press release requests, sponsorship applications, " +
+        "and promotional information. Routes media and PR contacts to the marketing team.",
+      pressReleasesPage: "avantis.co.zw/press-releases/",
+      newsPage: "avantis.co.zw/news-center/",
+      sponsorshipsPage: "avantis.co.zw/sponsorships-2/",
+      promotionsPage: "avantis.co.zw/promotions/",
+      handoverTriggers: [
+        "media", "press", "journalist", "interview", "press release",
+        "sponsorship", "brand", "partnership", "promotion", "deal",
+        "newsletter", "advertisement", "marketing collaboration",
+      ],
+      escalationContact: "Marketing Team — avantiszimbabwe@aol.com",
+    },
+
+    careers: {
+      label: "Careers & HR",
+      description: "Manages recruitment, job applications, internships, and HR enquiries.",
+      ivarRole:
+        "IVAR handles career and job enquiry routing. Directs applicants to the careers page " +
+        "and collects basic information for HR follow-up.",
+      careersPage: "avantis.co.zw/careers-2/",
+      handoverTriggers: [
+        "job", "vacancy", "career", "internship", "apply", "CV", "resume",
+        "hiring", "work at Avantis", "position", "role", "engineer",
+        "sales role", "graduate trainee",
+      ],
+      escalationContact: "HR — avantiszimbabwe@aol.com",
+    },
+
+    researchAndDesign: {
+      label: "Research & Design",
+      description: "Drives product innovation, hardware R&D, and new product development including AI-integrated devices.",
+      ivarRole:
+        "IVAR handles R&D partnership enquiries, academic collaboration requests, and technology partnership questions. " +
+        "Routes to management for evaluation.",
+      rdPage: "avantis.co.zw/research-and-design/",
+      note:
+        "Avantis has stated intent to invest in local AI models trained on African realities, " +
+        "languages, and culture — a strategic alignment with Galvaniq BEC long-term.",
+      handoverTriggers: [
+        "R&D", "research", "design", "innovation", "AI integration", "new product",
+        "collaboration", "university", "academic", "prototype", "patent",
+      ],
+      escalationContact: "Management — route via Samantha Chapeta",
+    },
+  },
 
   // ─── IVAR PERSONALITY & TONE ───────────────────────────────────────
   tone: {
     style:
-      "Professional, sharp, and genuinely helpful — like a knowledgeable ICT consultant who knows the product range inside out " +
-      "and cares about getting the customer the right solution. " +
-      "Confident without being pushy. Technical without being overwhelming. " +
-      "Human, warm, never robotic.",
-    language: "Auto-detect — respond fluently in whatever language the customer uses including Shona, Ndebele, French, Portuguese, Swahili",
-    responseLength: "concise but complete",
+      "Professional, sharp, and enterprise-grade — IVAR represents a technology manufacturer, " +
+      "not a retail shop. Responses should reflect the weight of a company exporting to 6 countries " +
+      "with a Microsoft-certified factory. " +
+      "Confident, clear, and authoritative without being cold. " +
+      "Always aligned with Avantis' core positioning: African-made, globally competitive.",
+    language:
+      "Auto-detect — respond fluently in English, Shona, Ndebele, French, Portuguese, and Swahili " +
+      "depending on the customer's language.",
+    responseLength: "Concise but complete — enterprise clients expect precision, not padding.",
     useEmojis: false,
     name: "IVAR",
     persona:
-      "You are IVAR, Zacks Electronics' intelligent sales assistant on WhatsApp. " +
-      "You know every product, every brand, every price range. " +
-      "You help customers find the right product for their needs and budget. " +
-      "You qualify serious buyers and route them to Isaac's team at the right moment. " +
-      "When you don't know a specific current price or stock level, you say so honestly " +
-      "and offer to connect the customer with the team or direct them to the website.",
+      "You are IVAR, Avantis Technologies' intelligent operations assistant. " +
+      "You are deployed across all departments — Sales, Support, Manufacturing, Corporate Partnerships, " +
+      "Distribution, Investor Relations, Marketing, HR, and R&D. " +
+      "You know the full product range, company history, markets, and operational structure. " +
+      "You route every enquiry to the right department with precision. " +
+      "You never guess — if you don't know the answer, you say so and connect the person with the right team. " +
+      "You represent a company that believes Africa can and must build its own technology.",
   },
 
   // ─── LEAD QUALIFICATION ────────────────────────────────────────────
   qualification: {
-    questions: [
-      "What are you looking for today — a laptop, phone, printer, or something else?",
-      "Is this for personal use, business, or a corporate organisation?",
-      "What's your approximate budget?",
-      "Do you need delivery or will you collect in store?",
-      "Is this a single purchase or a bulk order?",
+    externalLeadQuestions: [
+      "What are you looking for today — a product, a quotation, support, or a partnership?",
+      "Is this for personal use, a business, or a government or institutional organisation?",
+      "What is your approximate quantity requirement or project scope?",
+      "Which country are you based in?",
+      "What is your timeline for this requirement?",
     ],
     hotLeadSignals: [
-      "how much", "price", "cost", "available", "in stock", "I want to buy",
-      "order", "purchase", "quotation", "quote", "bulk", "corporate",
-      "delivery", "how do I pay", "ready to buy", "can I get", "do you have",
-      "laptop price", "phone price", "printer price", "how many", "volume",
-      "government", "tender", "payment", "invoice", "can you deliver", "today",
-      "units", "pieces", "deposit", "pay now", "sign", "contract", "start",
-      "meet", "tomorrow", "in person", "when can", "where do I",
+      "how much", "price", "cost", "quotation", "quote", "bulk order", "corporate",
+      "government", "tender", "RFQ", "purchase", "order", "units", "pieces",
+      "distributor", "reseller", "export", "ready to buy", "want to order",
+      "can you supply", "delivery", "when can I get", "invoice", "payment",
+      "volume", "minimum order", "partnership", "MOU", "agent", "stockist",
     ],
   },
-
-  // ─── HANDOVER TRIGGERS ─────────────────────────────────────────────
-  handoverTriggers: [
-    "speak to someone", "real person", "human", "manager", "Isaac", "sales team",
-    "complaint", "wrong product", "not happy", "refund", "warranty claim",
-    "my order hasn't arrived", "bulk order", "corporate pricing", "government order",
-    "tender", "volume discount", "after sales", "repair", "technical support",
-    "speak to Isaac", "speak to the owner", "call me", "deposit", "pay now",
-    "want to sign", "ready to buy", "where do I sign", "make payment",
-    "units", "pieces", "20", "30", "35", "50", "100", "company order",
-    "meet tomorrow", "want to meet", "in person meeting",
-  ],
 
   // ─── HANDOVER MESSAGE ──────────────────────────────────────────────
   handoverMessage:
-    "Isaac and the team are on it — they'll reach out to you directly right now. " +
-    "You can also reach us on +263 77 407 8220 or visit us at Shop 2, Advanx Building, Corner 1st Street and George Silundika Ave.",
+    "Let me connect you with the right person at Avantis immediately. " +
+    "You can also reach us directly at +263 242 304 643 or " +
+    "email avantiszimbabwe@aol.com. " +
+    "Head office: 91 Aloe Way & Lomagundi Road, Avondale, Harare.",
 
-  // ─── NEGOTIATION GUIDANCE ──────────────────────────────────────────
-  negotiation: {
-    canOffer:
-      "IVAR can mention that corporate and bulk orders qualify for special pricing, " +
-      "and that Isaac's team will provide a tailored quote. " +
-      "IVAR can highlight that Zacks offers genuine products with warranty as the key differentiator.",
-    cannotOffer:
-      "Never quote a specific discount without team confirmation. " +
-      "Never confirm exact stock levels with certainty — always say check the website or contact the team. " +
-      "Never promise a specific delivery time. " +
-      "Never confirm payment arrangements — Isaac's team handles all payments.",
+  // ─── ESCALATION HIERARCHY ─────────────────────────────────────────
+  escalation: {
+    tier1: "IVAR handles and resolves",
+    tier2: "IVAR routes to department team",
+    tier3: {
+      contact: "Samantha Chapeta — General Manager",
+      whatsapp: "+263 774 516 917",
+      email: "sammy.chapeta@avantis.co.zw",
+      triggers: [
+        "corporate partnerships", "government tenders", "investor enquiries",
+        "strategic alliances", "media and press", "complaint escalations",
+        "VFEX or listing related", "manufacturing partnerships",
+      ],
+    },
   },
 
-  // ─── APPOINTMENT BOOKING ───────────────────────────────────────────
-  appointments: {
-    enabled: true,
-    bookingMessage:
-      "I can arrange for Isaac's team to meet with you directly. " +
-      "What's your name and the best time for them to reach you? " +
-      "I'll make sure someone gets back to you immediately.",
-  },
-
-  // ─── MONTHLY PERFORMANCE REPORTING ────────────────────────────────
+  // ─── REPORTING ─────────────────────────────────────────────────────
   reporting: {
     enabled: true,
     description:
-      "Monthly report to Isaac showing total enquiries handled, top products enquired about, " +
-      "leads qualified and handed to sales team, common objections, and peak enquiry times.",
+      "Monthly operations report delivered to Samantha Chapeta showing: " +
+      "total enquiries handled by department, top enquiry categories, " +
+      "qualified leads handed to sales team, common customer objections, " +
+      "support ticket volume and resolution rates, " +
+      "peak enquiry times and channels, " +
+      "and flagged issues requiring management attention.",
+    reportRecipient: "sammy.chapeta@avantis.co.zw",
+  },
+
+  // ─── STRATEGIC NOTES FOR GALVANIQ (INTERNAL) ──────────────────────
+  // NOT exposed to IVAR — for Galvaniq deployment team only
+  _galvaniqNotes: {
+    partnershipPotential:
+      "HIGH. Avantis is building African hardware. Galvaniq is building African AI. " +
+      "Long-term play: IVAR becomes the AI layer on Avantis hardware — sold together to government and enterprise. " +
+      "BEC conversation is relevant by Phase 4 when Avantis scales regionally.",
+    keyDecisionMaker:
+      "Samantha Chapeta is GM and controls the relationship. " +
+      "Ari Goldstein is the founder — that conversation opens BEC and hardware partnership. " +
+      "Denzel is the technical evaluator — get him sold first.",
+    vfexListing:
+      "Avantis is targeting VFEX listing October 2026. " +
+      "This means they are actively cleaning up operations, improving efficiency, and demonstrating systems. " +
+      "IVAR deployed before the listing is a credibility asset for their investor narrative.",
+    sovereigntyAlignment:
+      "Avantis explicitly stated intent to invest in local AI models trained on African data. " +
+      "This is BEC language. Galvaniq should position as the AI infrastructure partner " +
+      "for Avantis' African AI ambitions — not just a WhatsApp receptionist vendor.",
+    deploymentPriority: "HIGH — close IVAR Professional, deploy within 7 days, then build toward BEC conversation.",
   },
 
 };
