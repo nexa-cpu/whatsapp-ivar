@@ -1,23 +1,20 @@
 /**
  * IVAR CLIENT CONFIGURATION — GALVANIQ GROUP
  * ─────────────────────────────────────────────────────────────────────
- * Client:        Avantis Technologies Ltd
- * GM:            Samantha Chapeta
- * IT Lead:       Denzel (surname TBC)
- * Package:       IVAR Professional — $400/month + $750 setup
- * Head Office:   91 Aloe Way & Lomagundi Road, Avondale, Harare, Zimbabwe
- * Manufacturing: Msasa Factory, Harare (Microsoft Certified) + Mainland China
- * Phone:         +263 242 304 643
- * WhatsApp:      +263 774 516 917 (Samantha)
- * Email:         avantiszimbabwe@aol.com
- * Website:       avantis.co.zw
- * Founded:       September 16, 2016
+ * Client: Avantis Technologies Ltd
+ * General Manager: Samantha Chapeta
+ * IT Contact: Denzel (IT Department)
+ * Package: IVAR Professional — $400/month + $750 setup
+ * Head Office: 91 Aloe Way & Lomagundi Road, Avondale, Harare, Zimbabwe
+ * Website: avantis.co.zw
+ * Email: avantiszimbabwe@aol.com
+ * Phone: +263 242 304 643
  * ─────────────────────────────────────────────────────────────────────
- * NOTE: This is NOT a WhatsApp receptionist.
- * IVAR is deployed as an intelligent internal + external operations system
- * connected across Sales, Customer Support, Manufacturing Enquiries,
- * Corporate/Government Procurement, Distribution, and Marketing departments.
- * ─────────────────────────────────────────────────────────────────────
+ * IVAR is deployed across Avantis departments — handling customer
+ * enquiries, product support, partnership requests, dealer onboarding,
+ * bulk & corporate sales, investor relations routing, and careers —
+ * 24/7 — freeing the Avantis team to focus on manufacturing, R&D,
+ * and closing enterprise deals.
  */
 
 module.exports = {
@@ -25,28 +22,31 @@ module.exports = {
   // ─── BUSINESS IDENTITY ─────────────────────────────────────────────
   business: {
     name: "Avantis Technologies",
-    legalName: "Avantis Technologies Ltd",
-    tagline: "The Computer Manufacturing Company in Zimbabwe",
-    founded: "September 16, 2016",
+    industry: "Technology Manufacturing & ICT Solutions",
     description:
-      "Avantis Technologies is Zimbabwe's leading computer hardware manufacturer, " +
-      "specialising in the design, manufacturing, and local assembly of laptops, desktops, tablets, " +
-      "sound devices, and accessories. " +
-      "With an annual production capacity of 48,000 to 315,000 units, Avantis powers its devices " +
-      "with industry-standard Intel processors and operates a Microsoft-certified factory in Msasa, Harare. " +
-      "80% of products are exported globally — with distribution hubs in Uganda, South Africa, " +
-      "the Netherlands, and China. " +
-      "Avantis operates across Zimbabwe, South Africa, Angola, Kenya, Mozambique, and Uganda, " +
-      "and is preparing for a VFEX stock exchange listing in 2026.",
+      "Avantis Technologies is a Zimbabwean technology company founded on September 16, 2016, " +
+      "specialising in the design, manufacturing, and local assembly of hardware and software products. " +
+      "With an annual production capacity of 48,000 to 315,000 units, Avantis is one of Africa's " +
+      "leading ICT manufacturers. All devices are powered by industry-standard Intel processors. " +
+      "The Harare Msasa factory is Microsoft certified. Avantis serves clients in Zimbabwe, " +
+      "South Africa, Angola, Kenya, Mozambique, and Uganda — with 80% of products exported globally " +
+      "through distribution hubs in Uganda, South Africa, the Netherlands, and China.",
+    location: "91 Aloe Way & Lomagundi Road, Avondale, Harare, Zimbabwe",
+    headquarters: "91 Aloe Way & Lomagundi Road, Avondale, Harare, Zimbabwe",
+    manufacturing: "Msasa, Harare (Microsoft certified) and Mainland China",
+    distributionHubs: "Uganda, South Africa, the Netherlands, China",
+    markets: "Zimbabwe (20%), Export — Africa, Latin America, Global (80%)",
+    website: "avantis.co.zw",
+    email: "avantiszimbabwe@aol.com",
+    phone: "+263 242 304 643",
+    workingHours: "Monday to Friday: 8am – 5pm | Saturday: 8am – 1pm | Sunday: Closed",
+    currency: "USD",
     vision: "To be the first choice of ICT provider in Africa and the world.",
     mission:
       "To enhance the 4th Industrial Revolution through affordable devices to every household " +
       "in Africa, Latin America, and the world via world-class, research-based innovations.",
-    coreValues: ["Innovation", "Responsibility", "Customer Service", "Fun"],
-    website: "avantis.co.zw",
-    email: "avantiszimbabwe@aol.com",
-    workingHours: "Monday to Friday: 8am – 5pm | Saturday: By appointment | Sunday: Closed",
-    currency: "USD",
+    founded: "September 16, 2016",
+    countries: "Zimbabwe, South Africa, Angola, Kenya, Mozambique, Uganda",
     socialMedia: {
       facebook: "avantistech",
       instagram: "avantistech",
@@ -54,467 +54,346 @@ module.exports = {
     },
   },
 
-  // ─── LOCATIONS ─────────────────────────────────────────────────────
-  locations: {
-    headOffice: {
-      label: "Head Office",
-      address: "91 Aloe Way & Lomagundi Road, Avondale, Harare, Zimbabwe",
-      phone: "+263 242 304 643",
-      whatsapp: "+263 774 516 917",
-      email: "avantiszimbabwe@aol.com",
-    },
-    manufacturing: [
-      {
-        label: "Msasa Factory — Harare",
-        note: "Microsoft Certified manufacturing facility. Primary local assembly and production.",
-      },
-      {
-        label: "Manufacturing Partner — Mainland China",
-        note: "Offshore manufacturing for volume production and component supply.",
-      },
-    ],
-    distributionHubs: [
-      "Uganda",
-      "South Africa",
-      "The Netherlands",
-      "China",
-    ],
-    activeMarkets: [
-      "Zimbabwe (20% of units — local market)",
-      "South Africa",
-      "Angola",
-      "Kenya",
-      "Mozambique",
-      "Uganda",
-      "Global export (80% of total production)",
-    ],
+  // ─── OWNER / ESCALATION CONTACT ────────────────────────────────────
+  owner: {
+    name: "Samantha",
+    role: "General Manager",
+    whatsappNumber: "263788946950",
+    email: "sammy.chapeta@avantis.co.zw",
+    backupEmail: "avantiszimbabwe@aol.com",
+    directLine: "+263 242 304 643",
   },
 
-  // ─── KEY CONTACTS ──────────────────────────────────────────────────
-  keyContacts: {
-    generalManager: {
-      name: "Samantha Chapeta",
-      role: "General Manager",
-      whatsapp: "+263 774 516 917",
-      email: "sammy.chapeta@avantis.co.zw",
-      note: "Primary decision maker for operational and technology partnerships.",
-    },
-    itLead: {
-      name: "Denzel",
-      role: "IT Lead",
-      note: "Technical evaluator for IVAR deployment. Reports to Samantha.",
-    },
-  },
-
-  // ─── PRODUCTS & OFFERINGS ──────────────────────────────────────────
+  // ─── PRODUCTS & SERVICES ───────────────────────────────────────────
   offerings: [
 
     // ── LAPTOPS ──
     {
-      category: "Laptops",
-      description: "Avantis-manufactured laptops powered by Intel processors. Engineered for performance, durability, and affordability.",
-      products: [
-        {
-          name: "Avantis P1 NoteBook",
-          description: "Entry-level Avantis laptop. Slim design, Intel processor, ideal for education and home use.",
-          price: "$350",
-          availability: "In stock",
-        },
-        {
-          name: "Avantis P2 NoteBook",
-          description: "Mid-range NoteBook with balanced performance for work and study.",
-          price: "$350",
-          availability: "In stock",
-        },
-        {
-          name: "Avantis P3 NoteBook",
-          description: "Professional NoteBook with enhanced performance. Ideal for business and enterprise use.",
-          price: "$390",
-          availability: "In stock",
-        },
-        {
-          name: "Avantis P4 NoteBook",
-          description: "Advanced NoteBook with high-efficiency Intel processor. For professionals and power users.",
-          price: "$389",
-          availability: "In stock",
-        },
-        {
-          name: "Avantis 15.6\" Intel Core i7 NoteBook",
-          description: "High-performance 15.6-inch laptop. Intel Core i7, 8GB RAM. For demanding workloads, creative work, and enterprise deployment.",
-          price: "$550",
-          availability: "In stock",
-        },
-        {
-          name: "Avantis Parote 1030i",
-          description: "Zimbabwe's first locally assembled laptop — unveiled May 2026. Represents Avantis' flagship locally assembled product line.",
-          price: "Contact sales for pricing",
-          availability: "New launch — contact sales team",
-          note: "Flagship product. Key talking point for government and corporate procurement conversations.",
-        },
-      ],
+      name: "Avantis P1 NoteBook",
+      description:
+        "Avantis-manufactured laptop, designed and assembled in Zimbabwe. " +
+        "Intel-powered. Built for everyday work, school, and small business use. " +
+        "Durable, reliable, and proudly African-made.",
+      price: "$350",
+      availability: "In stock — available at head office and authorised dealers",
+    },
+    {
+      name: "Avantis P2 NoteBook",
+      description:
+        "Mid-range Avantis notebook. Intel processor, optimised for office productivity " +
+        "and light creative work. Assembled at the Msasa, Harare facility.",
+      price: "$350",
+      availability: "In stock",
+    },
+    {
+      name: "Avantis P3 NoteBook",
+      description:
+        "Performance Avantis notebook. Sleek design, high-efficiency Intel processor, " +
+        "all-day battery life. Ideal for professionals who need speed and reliability on the move.",
+      price: "$390",
+      availability: "In stock",
+    },
+    {
+      name: "Avantis P4 NoteBook",
+      description:
+        "Upper-tier Avantis notebook. Premium build, serious performance. " +
+        "Designed for business professionals and power users who demand precision without limits.",
+      price: "$389",
+      availability: "In stock",
+    },
+    {
+      name: "Avantis 15.6 Inch Intel Core i7 Notebook",
+      description:
+        "High-performance Avantis notebook. Intel Core i7 processor, 8GB RAM, 15.6\" display. " +
+        "Built for demanding workloads — enterprise, engineering, content creation.",
+      price: "$550",
+      availability: "In stock",
+    },
+    {
+      name: "Avantis Parote 1030i",
+      description:
+        "Zimbabwe's first locally assembled laptop, launched May 2026. " +
+        "Intel Core i3 processor, designed for education and small business. " +
+        "A landmark product in African technology manufacturing — proudly made in Zimbabwe.",
+      price: "Contact sales team for pricing",
+      availability: "Available — contact team for current stock",
     },
 
     // ── DESKTOPS ──
     {
-      category: "Desktops",
-      description: "Avantis desktop computers for office, education, and enterprise. Available for bulk and corporate procurement.",
-      products: [
-        {
-          name: "Avantis Desktop Range",
-          description: "Intel-powered desktop computers for office and institutional use. Suitable for schools, government, and corporate environments.",
-          price: "Contact sales for configuration and pricing",
-          availability: "Available — contact sales for spec and quote",
-        },
-      ],
+      name: "Avantis Desktop Systems",
+      description:
+        "Avantis-assembled desktop computers for office and enterprise use. " +
+        "Intel-powered, configurable for specific business requirements. " +
+        "Ideal for schools, corporate offices, and government agencies.",
+      price: "Request quotation — pricing depends on configuration",
+      availability: "Available — contact sales team for specifications and pricing",
     },
 
     // ── SOUND ──
     {
-      category: "Sound Devices",
-      description: "Avantis audio products including speakers and sound accessories.",
-      products: [
-        {
-          name: "Avantis Sound Range",
-          description: "Sound devices designed for home, education, and office environments.",
-          price: "Contact sales for pricing",
-          availability: "In stock — visit website or contact team",
-        },
-      ],
+      name: "Avantis Sound Devices",
+      description:
+        "Avantis audio products including headphones and sound accessories. " +
+        "Designed for an immersive experience — compatible with Avantis devices and all major platforms.",
+      price: "Visit avantis.co.zw/sound for current range and pricing",
+      availability: "In stock",
     },
 
     // ── ACCESSORIES ──
     {
-      category: "Accessories",
-      description: "Avantis accessories including bags, adapters, peripherals, and device add-ons.",
-      products: [
-        {
-          name: "Avantis Accessories Range",
-          description: "Laptop bags, adapters, cables, and peripherals compatible with Avantis and standard devices.",
-          price: "From $5 — varies by product",
-          availability: "In stock",
-        },
-      ],
+      name: "Avantis Accessories",
+      description:
+        "Full range of Avantis-branded and compatible accessories — laptop bags, adapters, " +
+        "chargers, peripherals, and protective cases.",
+      price: "From $10 — visit avantis.co.zw/accessories for full range",
+      availability: "In stock",
     },
 
-    // ── SOFTWARE & DIGITAL ──
+    // ── SOFTWARE & DIGITAL SOLUTIONS ──
     {
-      category: "Software & Digital Solutions",
-      description: "Custom enterprise software and digital solutions developed by Avantis.",
-      products: [
-        {
-          name: "Custom Software Development",
-          description: "Enterprise and custom application development. Tailored for education, SME, and government clients.",
-          price: "Quoted per requirement",
-          availability: "Available by engagement — contact Samantha",
-        },
-        {
-          name: "Cloud Computing Services",
-          description: "Robust cloud infrastructure and data security services for organisations.",
-          price: "Quoted per requirement",
-          availability: "Contact sales",
-        },
-        {
-          name: "Digital Learning / E-Learning Solutions",
-          description: "Specialised e-learning applications for schools, training institutions, and education ministries.",
-          price: "Quoted per requirement",
-          availability: "Contact sales",
-        },
-      ],
+      name: "Custom Software Development",
+      description:
+        "Avantis builds custom applications and enterprise software solutions tailored to " +
+        "business and government requirements. From workflow automation to sector-specific applications.",
+      price: "Quoted per project scope — contact sales team",
+      availability: "Available — engage sales team for requirements discussion",
+    },
+    {
+      name: "Cloud Computing & Data Security",
+      description:
+        "Avantis provides robust cloud infrastructure and data security services. " +
+        "Designed for organisations that need reliable, secure, African-hosted compute.",
+      price: "Quoted per requirement",
+      availability: "Available — contact team",
+    },
+    {
+      name: "Digital Learning & E-Learning Solutions",
+      description:
+        "Avantis specialised e-learning applications and solutions for schools, universities, " +
+        "and training institutions. Deployed across Sub-Saharan Africa with a focus on affordability " +
+        "and access. Key vertical — particularly relevant for NGO and government education partners.",
+      price: "Quoted per institution and scale",
+      availability: "Available — contact partnerships team",
     },
 
-    // ── CORPORATE & GOVERNMENT ──
+    // ── CORPORATE & BULK ──
     {
-      category: "Corporate & Government Procurement",
-      description: "Avantis serves government agencies, parastatals, NGOs, and corporations with bulk hardware procurement, ICT fit-outs, and after-sales support.",
-      products: [
-        {
-          name: "Bulk Laptop & Desktop Procurement",
-          description:
-            "Volume supply of Avantis laptops and desktops for schools, government ministries, corporates, and NGOs. " +
-            "Custom configurations available. Competitive pricing for bulk orders.",
-          price: "Custom pricing — contact Samantha or sales team",
-          availability: "Available — minimum order quantities apply",
-        },
-        {
-          name: "ICT Infrastructure Supply",
-          description: "Full ICT fit-out supply including hardware, peripherals, accessories, and installation support for offices and institutions.",
-          price: "Quoted per project",
-          availability: "Available by arrangement",
-        },
-        {
-          name: "Education Sector Supply",
-          description:
-            "Laptops, desktops, and e-learning solutions for primary schools, secondary schools, colleges, and universities. " +
-            "Avantis has specific focus on making devices accessible to every African household — education is a primary market.",
-          price: "Subsidised pricing available for qualifying institutions — contact sales",
-          availability: "Available — contact Samantha for education procurement pricing",
-        },
-      ],
+      name: "Corporate & Government Procurement",
+      description:
+        "Avantis serves government agencies, schools, NGOs, and private companies with bulk " +
+        "hardware procurement, custom configurations, and after-sales support. " +
+        "Volume discounts available. Tender-ready documentation and compliance packages available.",
+      price: "Custom pricing for bulk and corporate orders — contact Samantha directly",
+      availability: "Available by arrangement",
+    },
+
+    // ── DEALER / DISTRIBUTION ──
+    {
+      name: "Dealer & Reseller Programme",
+      description:
+        "Avantis operates a structured dealer and reseller programme across Zimbabwe and Sub-Saharan Africa. " +
+        "Authorised dealers receive volume pricing, product training, and marketing support.",
+      price: "Dealer pricing discussed upon application",
+      availability: "Accepting applications — contact sales team",
     },
   ],
 
-  // ─── DEPARTMENTS — IVAR INTEGRATION MAP ───────────────────────────
-  // IVAR is connected to all departments. Each department has defined
-  // intents, triggers, and handover logic.
-  departments: {
-
-    sales: {
-      label: "Sales Department",
-      description: "Handles product enquiries, quotations, order processing, and customer conversions.",
-      ivarRole:
-        "IVAR qualifies inbound sales leads, answers product and pricing questions, " +
-        "captures customer details and requirements, and routes hot leads to the sales team. " +
-        "For bulk and corporate orders, IVAR collects full requirement specs before handover.",
-      handoverTriggers: [
-        "quotation", "quote", "how much", "price", "bulk order", "corporate order",
-        "government tender", "want to buy", "purchase", "order", "ready to pay",
-        "invoice", "pro forma", "can I get", "units", "pieces", "quantity",
-        "volume discount", "minimum order", "delivery", "when can I receive",
-        "in stock", "do you have", "available", "reseller", "distributor",
-        "partner pricing", "export order",
-      ],
-      escalationContact: "Samantha Chapeta — sammy.chapeta@avantis.co.zw | +263 774 516 917",
+  // ─── FREQUENTLY ASKED QUESTIONS ────────────────────────────────────
+  faqs: [
+    {
+      question: "Where are you located?",
+      answer:
+        "Our head office is at 91 Aloe Way & Lomagundi Road, Avondale, Harare. " +
+        "Our manufacturing facility is in Msasa, Harare.",
     },
-
-    customerSupport: {
-      label: "Customer Support Department",
-      description: "Handles post-sale support, warranty claims, product issues, repairs, and customer satisfaction.",
-      ivarRole:
-        "IVAR handles initial support triage — identifying the issue, collecting device details, " +
-        "and routing to the appropriate support channel. " +
-        "For warranty claims, IVAR collects proof of purchase and device details before handover. " +
-        "For technical issues, IVAR attempts first-level resolution using known FAQs and manuals.",
-      handoverTriggers: [
-        "not working", "broken", "warranty", "warranty claim", "repair", "fault",
-        "screen", "battery", "won't turn on", "slow", "crashed", "damaged",
-        "return", "exchange", "refund", "after sales", "support", "help with my device",
-        "technical issue", "product manual", "how to", "setup help",
-      ],
-      escalationContact: "Customer Support Team — avantiszimbabwe@aol.com | +263 242 304 643",
-      productManuals: "avantis.co.zw/product-manuals/",
-      productSupport: "avantis.co.zw/product-support/",
+    {
+      question: "What are your business hours?",
+      answer: "Monday to Friday 8am to 5pm, Saturday 8am to 1pm. Closed Sundays.",
     },
-
-    manufacturing: {
-      label: "Manufacturing & Production",
-      description: "Manages production at Msasa factory (Harare) and China partner facility. Handles production enquiries and capacity questions.",
-      ivarRole:
-        "IVAR handles inbound manufacturing partnership enquiries, component sourcing questions, " +
-        "OEM/ODM requests, and production capacity questions. " +
-        "IVAR does not confirm production schedules or capacity details — routes to management.",
-      handoverTriggers: [
-        "factory", "manufacturing", "production", "OEM", "ODM", "custom build",
-        "component", "assembly", "Msasa", "Microsoft certified", "production capacity",
-        "partnership", "supply chain", "white label", "custom hardware",
-      ],
-      note: "Msasa factory is Microsoft certified. China facility handles volume production.",
-      escalationContact: "Management — route via Samantha Chapeta",
+    {
+      question: "Where are Avantis products manufactured?",
+      answer:
+        "Our products are designed and assembled in Zimbabwe at our Msasa factory, " +
+        "which is Microsoft certified. We also manufacture in Mainland China for international scale. " +
+        "We are proudly Africa's computer manufacturing company.",
     },
-
-    corporatePartnerships: {
-      label: "Corporate & Government Partnerships",
-      description: "Manages B2G and B2B relationships, tenders, government procurement, and strategic partnerships.",
-      ivarRole:
-        "IVAR handles initial partnership and tender enquiries, captures organisation details, " +
-        "and routes serious prospects to Samantha. " +
-        "For government and NGO enquiries, IVAR collects: organisation name, contact person, " +
-        "procurement requirement, quantity estimate, and timeline.",
-      handoverTriggers: [
-        "government", "ministry", "parastatal", "NGO", "tender", "RFQ", "RFP",
-        "procurement", "ZITF", "VFEX", "investor", "partnership", "MOU",
-        "strategic alliance", "distribution agreement", "reseller", "agent",
-        "SADC", "export", "international", "wholesale",
-      ],
-      escalationContact: "Samantha Chapeta — sammy.chapeta@avantis.co.zw | +263 774 516 917",
+    {
+      question: "Which countries do you operate in?",
+      answer:
+        "Zimbabwe, South Africa, Angola, Kenya, Mozambique, and Uganda, " +
+        "with distribution hubs in Uganda, South Africa, the Netherlands, and China. " +
+        "80% of our products are sold outside Zimbabwe.",
     },
-
-    distribution: {
-      label: "Distribution & Logistics",
-      description: "Manages order fulfilment, delivery, export logistics, and distribution hub coordination.",
-      ivarRole:
-        "IVAR handles order tracking enquiries, delivery status questions, export documentation requests, " +
-        "and distribution hub contacts. " +
-        "Routes complex logistics queries to the operations team.",
-      distributionHubs: {
-        Uganda: "Contact sales team for Uganda hub details",
-        SouthAfrica: "Contact sales team for SA hub details",
-        Netherlands: "Contact sales team for EU distribution details",
-        China: "Contact sales team for China sourcing details",
-      },
-      handoverTriggers: [
-        "delivery", "shipping", "order status", "tracking", "export",
-        "logistics", "freight", "customs", "clearance", "dispatch",
-        "Uganda hub", "South Africa", "Netherlands", "China order",
-        "when will it arrive", "where is my order",
-      ],
-      escalationContact: "Operations — route via Samantha Chapeta or avantiszimbabwe@aol.com",
+    {
+      question: "Do your products come with warranty?",
+      answer:
+        "Yes — all Avantis products come with manufacturer warranty. " +
+        "Warranty periods vary by product. Visit avantis.co.zw/product-support for details.",
     },
-
-    investorRelations: {
-      label: "Investor Relations",
-      description: "Manages VFEX listing preparation, investor communications, and financial disclosures.",
-      ivarRole:
-        "IVAR handles initial investor enquiries, directs to investor relations page, " +
-        "and routes serious investor contacts to Samantha for management escalation. " +
-        "IVAR does not share financial data or confirm VFEX listing details — directs to official channels.",
-      investorPage: "avantis.co.zw/investor-relations/",
-      handoverTriggers: [
-        "investor", "investment", "shares", "VFEX", "listing", "equity",
-        "shareholder", "annual report", "financials", "valuation", "IPO",
-        "stake", "fund", "capital raise",
-      ],
-      escalationContact: "Management — route via Samantha Chapeta",
+    {
+      question: "Can I become an Avantis dealer or reseller?",
+      answer:
+        "Yes — we run a dealer and reseller programme across Sub-Saharan Africa. " +
+        "Tell me about your business and location and I'll connect you with our sales team.",
     },
-
-    marketing: {
-      label: "Marketing & Communications",
-      description: "Manages brand communications, press releases, promotions, sponsorships, and social media.",
-      ivarRole:
-        "IVAR handles media enquiries, press release requests, sponsorship applications, " +
-        "and promotional information. Routes media and PR contacts to the marketing team.",
-      pressReleasesPage: "avantis.co.zw/press-releases/",
-      newsPage: "avantis.co.zw/news-center/",
-      sponsorshipsPage: "avantis.co.zw/sponsorships-2/",
-      promotionsPage: "avantis.co.zw/promotions/",
-      handoverTriggers: [
-        "media", "press", "journalist", "interview", "press release",
-        "sponsorship", "brand", "partnership", "promotion", "deal",
-        "newsletter", "advertisement", "marketing collaboration",
-      ],
-      escalationContact: "Marketing Team — avantiszimbabwe@aol.com",
+    {
+      question: "Do you supply to schools and government?",
+      answer:
+        "Absolutely. Education and government procurement are core markets for us. " +
+        "We supply laptops, desktops, and full ICT solutions across Africa. " +
+        "Contact our sales team for corporate and tender pricing.",
     },
-
-    careers: {
-      label: "Careers & HR",
-      description: "Manages recruitment, job applications, internships, and HR enquiries.",
-      ivarRole:
-        "IVAR handles career and job enquiry routing. Directs applicants to the careers page " +
-        "and collects basic information for HR follow-up.",
-      careersPage: "avantis.co.zw/careers-2/",
-      handoverTriggers: [
-        "job", "vacancy", "career", "internship", "apply", "CV", "resume",
-        "hiring", "work at Avantis", "position", "role", "engineer",
-        "sales role", "graduate trainee",
-      ],
-      escalationContact: "HR — avantiszimbabwe@aol.com",
+    {
+      question: "Do you have e-learning solutions?",
+      answer:
+        "Yes — Avantis has specialised e-learning applications deployed across Sub-Saharan Africa. " +
+        "Relevant for schools, NGOs, and government education programmes. " +
+        "Contact our partnerships team for a detailed discussion.",
     },
-
-    researchAndDesign: {
-      label: "Research & Design",
-      description: "Drives product innovation, hardware R&D, and new product development including AI-integrated devices.",
-      ivarRole:
-        "IVAR handles R&D partnership enquiries, academic collaboration requests, and technology partnership questions. " +
-        "Routes to management for evaluation.",
-      rdPage: "avantis.co.zw/research-and-design/",
-      note:
-        "Avantis has stated intent to invest in local AI models trained on African realities, " +
-        "languages, and culture — a strategic alignment with Galvaniq BEC long-term.",
-      handoverTriggers: [
-        "R&D", "research", "design", "innovation", "AI integration", "new product",
-        "collaboration", "university", "academic", "prototype", "patent",
-      ],
-      escalationContact: "Management — route via Samantha Chapeta",
+    {
+      question: "How do I get a product quotation?",
+      answer:
+        "Visit avantis.co.zw and browse the product range, " +
+        "or tell me what you need here on WhatsApp and I'll help you build the right solution " +
+        "and connect you with our team for pricing.",
     },
-  },
+    {
+      question: "Do you offer cloud computing services?",
+      answer:
+        "Yes — Avantis provides cloud infrastructure and data security services. " +
+        "Tell me about your organisation's requirements and I'll connect you with our solutions team.",
+    },
+    {
+      question: "I'm interested in partnering with Avantis.",
+      answer:
+        "We welcome strategic partnerships — from NGOs and educational bodies to " +
+        "technology companies and multinational suppliers. " +
+        "Tell me about your organisation and what you have in mind and I'll connect you with Samantha directly.",
+    },
+    {
+      question: "Do you have job openings?",
+      answer:
+        "Visit avantis.co.zw/careers for current openings. " +
+        "Tell me the role you're interested in and I'll make sure the right person gets your details.",
+    },
+    {
+      question: "What is the Parote 1030i?",
+      answer:
+        "The Parote 1030i is Zimbabwe's first locally assembled laptop, launched in May 2026. " +
+        "Intel Core i3 powered, designed for education and small business. " +
+        "Contact our sales team for pricing and availability.",
+    },
+    {
+      question: "What payment methods do you accept?",
+      answer:
+        "USD cash, EcoCash, Zipit, and bank transfer for corporate orders. " +
+        "Contact our sales team for corporate payment arrangements.",
+    },
+  ],
 
   // ─── IVAR PERSONALITY & TONE ───────────────────────────────────────
   tone: {
     style:
-      "Professional, sharp, and enterprise-grade — IVAR represents a technology manufacturer, " +
-      "not a retail shop. Responses should reflect the weight of a company exporting to 6 countries " +
-      "with a Microsoft-certified factory. " +
-      "Confident, clear, and authoritative without being cold. " +
-      "Always aligned with Avantis' core positioning: African-made, globally competitive.",
+      "Professional, intelligent, and proudly African. " +
+      "IVAR represents Avantis — a company building technology from Zimbabwe for the world. " +
+      "Confident, knowledgeable, and forward-looking. Never robotic. Never generic. " +
+      "Warm but sharp. Clear and direct.",
     language:
-      "Auto-detect — respond fluently in English, Shona, Ndebele, French, Portuguese, and Swahili " +
-      "depending on the customer's language.",
-    responseLength: "Concise but complete — enterprise clients expect precision, not padding.",
+      "Auto-detect — respond fluently in whatever language the customer uses, " +
+      "including Shona, Ndebele, French, Portuguese, and Swahili.",
+    responseLength: "Concise but complete — enough detail to be genuinely useful without overwhelming.",
     useEmojis: false,
     name: "IVAR",
     persona:
-      "You are IVAR, Avantis Technologies' intelligent operations assistant. " +
-      "You are deployed across all departments — Sales, Support, Manufacturing, Corporate Partnerships, " +
-      "Distribution, Investor Relations, Marketing, HR, and R&D. " +
-      "You know the full product range, company history, markets, and operational structure. " +
-      "You route every enquiry to the right department with precision. " +
-      "You never guess — if you don't know the answer, you say so and connect the person with the right team. " +
-      "You represent a company that believes Africa can and must build its own technology.",
+      "You are IVAR, Avantis Technologies' intelligent AI assistant on WhatsApp. " +
+      "You serve every department — sales, support, partnerships, dealer onboarding, careers, and investor relations. " +
+      "You know the full Avantis product range, company history, manufacturing capabilities, and market presence. " +
+      "You represent a company that manufactures technology in Africa for the world — carry that pride. " +
+      "You qualify enquiries accurately, route them to the right team, and never leave a customer without a clear next step. " +
+      "When you don't know a specific current price, stock level, or internal detail, say so honestly " +
+      "and connect the customer with Samantha's team immediately.",
   },
 
   // ─── LEAD QUALIFICATION ────────────────────────────────────────────
   qualification: {
-    externalLeadQuestions: [
-      "What are you looking for today — a product, a quotation, support, or a partnership?",
-      "Is this for personal use, a business, or a government or institutional organisation?",
-      "What is your approximate quantity requirement or project scope?",
-      "Which country are you based in?",
-      "What is your timeline for this requirement?",
+    questions: [
+      "What can I help you with today — a product enquiry, support request, partnership, or something else?",
+      "Is this for personal use, a business, school, or government organisation?",
+      "Are you based in Zimbabwe or another country?",
+      "Is this a single purchase or a bulk or institutional order?",
+      "What's your approximate budget or quantity requirement?",
     ],
     hotLeadSignals: [
-      "how much", "price", "cost", "quotation", "quote", "bulk order", "corporate",
-      "government", "tender", "RFQ", "purchase", "order", "units", "pieces",
-      "distributor", "reseller", "export", "ready to buy", "want to order",
-      "can you supply", "delivery", "when can I get", "invoice", "payment",
-      "volume", "minimum order", "partnership", "MOU", "agent", "stockist",
+      "price", "cost", "how much", "available", "in stock", "I want to buy",
+      "order", "purchase", "quotation", "quote", "bulk", "corporate",
+      "government", "tender", "school", "university", "NGO",
+      "delivery", "payment", "invoice", "ready to buy", "can I get",
+      "laptop price", "desktop price", "units", "pieces",
+      "dealer", "reseller", "distributor", "authorised",
+      "partner", "invest", "sponsor", "collaborate",
+      "Parote", "P1", "P2", "P3", "P4", "i7", "i5", "i3",
+      "how many", "volume", "deposit", "pay now", "sign",
+      "meet", "tomorrow", "in person", "when can", "where do I",
     ],
   },
+
+  // ─── HANDOVER TRIGGERS ─────────────────────────────────────────────
+  handoverTriggers: [
+    "speak to someone", "real person", "human", "manager", "Samantha", "sales team",
+    "complaint", "wrong product", "not happy", "refund", "warranty claim",
+    "bulk order", "corporate pricing", "government order", "tender",
+    "volume discount", "after sales", "repair", "technical support",
+    "speak to the owner", "call me", "deposit", "pay now",
+    "want to sign", "ready to buy", "where do I sign", "make payment",
+    "units", "pieces", "20", "30", "50", "100", "company order",
+    "meet tomorrow", "want to meet", "in person meeting",
+    "partnership", "investor", "sponsor", "joint venture",
+    "dealer application", "reseller", "become a dealer",
+    "careers", "job application", "internship",
+    "Denzel", "IT support", "technical issue", "system not working",
+  ],
 
   // ─── HANDOVER MESSAGE ──────────────────────────────────────────────
   handoverMessage:
-    "Let me connect you with the right person at Avantis immediately. " +
-    "You can also reach us directly at +263 242 304 643 or " +
-    "email avantiszimbabwe@aol.com. " +
-    "Head office: 91 Aloe Way & Lomagundi Road, Avondale, Harare.",
+    "Samantha and the team are on it — they'll reach out to you directly right now. " +
+    "You can also reach us on +263 242 304 643 or visit us at 91 Aloe Way & Lomagundi Road, Avondale, Harare.",
 
-  // ─── ESCALATION HIERARCHY ─────────────────────────────────────────
-  escalation: {
-    tier1: "IVAR handles and resolves",
-    tier2: "IVAR routes to department team",
-    tier3: {
-      contact: "Samantha Chapeta — General Manager",
-      whatsapp: "+263 774 516 917",
-      email: "sammy.chapeta@avantis.co.zw",
-      triggers: [
-        "corporate partnerships", "government tenders", "investor enquiries",
-        "strategic alliances", "media and press", "complaint escalations",
-        "VFEX or listing related", "manufacturing partnerships",
-      ],
-    },
+  // ─── NEGOTIATION GUIDANCE ──────────────────────────────────────────
+  negotiation: {
+    canOffer:
+      "IVAR can mention that corporate, government, and bulk orders qualify for special pricing, " +
+      "and that Samantha's team will provide a tailored quotation. " +
+      "IVAR can highlight that Avantis products are locally manufactured with full warranty " +
+      "and after-sales support — buying Avantis is buying African-made quality.",
+    cannotOffer:
+      "Never quote a specific discount percentage without team confirmation. " +
+      "Never confirm exact stock levels with certainty — always direct to the website or team. " +
+      "Never promise a specific delivery time. " +
+      "Never confirm payment arrangements — Samantha's team handles all payments and corporate deals.",
   },
 
-  // ─── REPORTING ─────────────────────────────────────────────────────
+  // ─── APPOINTMENT BOOKING ───────────────────────────────────────────
+  appointments: {
+    enabled: true,
+    description:
+      "For corporate clients, bulk buyers, partnership enquiries, or dealer applications, " +
+      "IVAR can arrange a meeting with the Avantis team at head office or via call.",
+    bookingMessage:
+      "I can arrange for our team to connect with you directly. " +
+      "What's your name, organisation, and the best time for them to reach you? " +
+      "I'll make sure the right person gets back to you immediately.",
+  },
+
+  // ─── MONTHLY PERFORMANCE REPORTING ────────────────────────────────
   reporting: {
     enabled: true,
     description:
-      "Monthly operations report delivered to Samantha Chapeta showing: " +
-      "total enquiries handled by department, top enquiry categories, " +
-      "qualified leads handed to sales team, common customer objections, " +
-      "support ticket volume and resolution rates, " +
-      "peak enquiry times and channels, " +
-      "and flagged issues requiring management attention.",
-    reportRecipient: "sammy.chapeta@avantis.co.zw",
-  },
-
-  // ─── STRATEGIC NOTES FOR GALVANIQ (INTERNAL) ──────────────────────
-  // NOT exposed to IVAR — for Galvaniq deployment team only
-  _galvaniqNotes: {
-    partnershipPotential:
-      "HIGH. Avantis is building African hardware. Galvaniq is building African AI. " +
-      "Long-term play: IVAR becomes the AI layer on Avantis hardware — sold together to government and enterprise. " +
-      "BEC conversation is relevant by Phase 4 when Avantis scales regionally.",
-    keyDecisionMaker:
-      "Samantha Chapeta is GM and controls the relationship. " +
-      "Ari Goldstein is the founder — that conversation opens BEC and hardware partnership. " +
-      "Denzel is the technical evaluator — get him sold first.",
-    vfexListing:
-      "Avantis is targeting VFEX listing October 2026. " +
-      "This means they are actively cleaning up operations, improving efficiency, and demonstrating systems. " +
-      "IVAR deployed before the listing is a credibility asset for their investor narrative.",
-    sovereigntyAlignment:
-      "Avantis explicitly stated intent to invest in local AI models trained on African data. " +
-      "This is BEC language. Galvaniq should position as the AI infrastructure partner " +
-      "for Avantis' African AI ambitions — not just a WhatsApp receptionist vendor.",
-    deploymentPriority: "HIGH — close IVAR Professional, deploy within 7 days, then build toward BEC conversation.",
+      "Monthly report delivered to Samantha showing: " +
+      "total enquiries handled by department, top products enquired about, " +
+      "leads qualified and handed to sales team, partnership and dealer enquiries captured, " +
+      "common customer questions and objections, peak enquiry times and days, " +
+      "and countries of origin of inbound enquiries.",
   },
 
 };
