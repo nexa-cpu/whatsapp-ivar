@@ -102,35 +102,6 @@ module.exports = {
     itLead: {
       name: "Denzel",
       role: "IT Lead",
-      answer:
-        "Yes — we serve government agencies and companies with corporate pricing and volume discounts. " +
-        "Tell me about your organisation's requirements and our team will get you a tailored quote.",
-    },
-    {
-      question: "What payment methods do you accept?",
-      answer: "USD cash, EcoCash, Zipit, and bank transfer for corporate orders.",
-    },
-    {
-      question: "Do you sell MacBooks?",
-      answer:
-        "We don't stock MacBooks currently, but we carry premium Windows laptops from HP, Lenovo, Dell, and Asus " +
-        "that match or exceed MacBook performance at better value. Let me know your use case and budget and I'll recommend the right one.",
-    },
-    {
-      question: "Do you have laptops under $300?",
-      answer:
-        "Yes — we have the HP 15s from $250, Lenovo IdeaPad 3 from $270, and Acer Aspire 5 from $290. " +
-        "All come with warranty. Which will you be using it for?",
-    },
-    {
-      question: "Do you repair electronics?",
-      answer:
-        "For repair services, let me connect you with our team directly — they'll advise what we can assist with.",
-    },
-    {
-      question: "How do I track my order?",
-      answer:
-        "Share your order
       note: "Technical evaluator for IVAR deployment. Reports to Samantha.",
     },
   },
