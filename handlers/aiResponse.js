@@ -9,27 +9,75 @@ const config = require('../config/client');
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // ══════════════════════════════════════════════════════════════
+// CONVERSATION HISTORY FORMATTER
+// Converts MongoDB format → OpenAI format
+// Fixes: 400 Missing required parameter 'messages[x].role'
+// ══════════════════════════════════════════════════════════════
+
+function formatConversationHistory(history) {
+  if (!history || history.length === 0) return [];
+
+  const formatted = [];
+
+  for (const msg of history) {
+    // Already in OpenAI format — validate and pass through
+    if (msg.role && msg.content) {
+      if (
+        ['user', 'assistant', 'system'].includes(msg.role) &&
+        msg.content.trim().length > 0
+      ) {
+        formatted.push({ role: msg.role, content: msg.content.trim() });
+      }
+      continue;
+    }
+
+    // MongoDB format { userMessage, aiResponse } → OpenAI pairs
+    if (msg.userMessage && msg.userMessage.trim()) {
+      formatted.push({ role: 'user', content: msg.userMessage.trim() });
+    }
+    if (msg.aiResponse && msg.aiResponse.trim()) {
+      formatted.push({ role: 'assistant', content: msg.aiResponse.trim() });
+    }
+  }
+
+  // Final safety filter — OpenAI rejects anything missing role or content
+  return formatted.filter(
+    m =>
+      m &&
+      typeof m.role === 'string' &&
+      typeof m.content === 'string' &&
+      m.role.length > 0 &&
+      m.content.length > 0
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
 // ADMIN DETECTION
 // ══════════════════════════════════════════════════════════════
 
 const ADMIN_NUMBERS = {
-  [config.admins.michael.phone]: config.admins.michael,
-  ['+26378894 6950']: config.admins.michael,
-  ['0788946950']: config.admins.michael,
-  [config.admins.ashell.phone]: config.admins.ashell,
-  ['+263789759155']: config.admins.ashell,
-  ['0789759155']: config.admins.ashell,
+  [normalizePhone(config.admins.michael.phone)]: config.admins.michael,
+  '263788946950': config.admins.michael,
+  '0788946950': config.admins.michael,
+  [normalizePhone(config.admins.ashell.phone)]: config.admins.ashell,
+  '263789759155': config.admins.ashell,
+  '0789759155': config.admins.ashell,
 };
 
 function normalizePhone(phone) {
-  return phone.replace(/[\s\-\(\)]/g, '');
+  if (!phone) return '';
+  return phone.replace(/[\s\-\(\)\+]/g, '');
 }
 
 function detectAdmin(senderPhone) {
+  if (!senderPhone) return null;
   const normalized = normalizePhone(senderPhone);
   for (const [key, admin] of Object.entries(ADMIN_NUMBERS)) {
-    if (normalized.includes(normalizePhone(key)) || 
-        normalizePhone(key).includes(normalized)) {
+    if (
+      normalized === key ||
+      normalized.endsWith(key) ||
+      key.endsWith(normalized)
+    ) {
       return admin;
     }
   }
@@ -38,12 +86,12 @@ function detectAdmin(senderPhone) {
 
 function isMichael(senderPhone) {
   const admin = detectAdmin(senderPhone);
-  return admin && admin.role === 'CEO';
+  return admin?.role === 'CEO';
 }
 
 function isAshell(senderPhone) {
   const admin = detectAdmin(senderPhone);
-  return admin && admin.role === 'CTO';
+  return admin?.role === 'CTO';
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -54,17 +102,17 @@ const HANDOVER_TRIGGERS = [
   // Financial & Legal
   /\b(payment|deposit|pay now|sign|contract|invoice|transfer|bank details|quotation|quote|price list)\b/i,
   // Scale
-  /\b(\d{2,}\s*units|\d{2,}\s*licenses|bulk order|enterprise deal|nationwide|government tender|RFP|RFQ)\b/i,
-  // Meeting / Call
-  /\b(meet|meeting|call me|schedule|book a time|speak to someone|talk to a person|phone call|zoom|teams)\b/i,
+  /\b(\d{2,}\s*units|\d{2,}\s*licen[sc]es|bulk order|enterprise deal|nationwide|government tender|rfp|rfq)\b/i,
+  // Meeting or call
+  /\b(meet|meeting|call me|schedule|book a time|speak to someone|talk to a person|phone call|zoom|teams|video call)\b/i,
   // Urgency
   /\b(urgent|asap|today|immediately|right now|time sensitive)\b/i,
   // Complaints
-  /\b(complaint|not working|failed|broken|terrible|disgusted|escalate|legal action|refund)\b/i,
-  // High-value indicators
+  /\b(complaint|not working|failed|broken|terrible|disgusted|escalate|legal action|refund|scam)\b/i,
+  // High value
   /\b(board|ceo|cto|cfo|director|executive|partner|investor|acquisition|merger)\b/i,
-  // Partnership / Investment
-  /\b(partnership|invest|invest in|equity|stake|joint venture|collaborate|strategic)\b/i,
+  // Partnership or investment
+  /\b(partnership|invest|invest in|equity|stake|joint venture|collaborate|strategic alliance)\b/i,
 ];
 
 function checkSafetyHandover(message) {
@@ -82,22 +130,24 @@ function checkSafetyHandover(message) {
 }
 
 function determineEscalationTarget(message) {
-  const technicalPatterns = /\b(api|integration|server|database|architecture|deployment|infrastructure|code|technical|system|security|SSL|endpoint|webhook|install|configure)\b/i;
-  if (technicalPatterns.test(message)) return 'ashell';
-  return 'michael';
+  const technicalPatterns =
+    /\b(api|integration|server|database|architecture|deployment|infrastructure|code|technical|system|security|ssl|endpoint|webhook|install|configure|hardware|specs|bandwidth|latency|uptime)\b/i;
+  return technicalPatterns.test(message) ? 'ashell' : 'michael';
 }
 
 // ══════════════════════════════════════════════════════════════
-// PROSPECT MEMORY (In-Memory + MongoDB backed)
+// PROSPECT MEMORY
 // ══════════════════════════════════════════════════════════════
 
 const prospectMemory = {};
 
 function getProspect(phone) {
+  if (!phone) return null;
   return prospectMemory[normalizePhone(phone)] || null;
 }
 
 function upsertProspect(phone, data) {
+  if (!phone) return null;
   const key = normalizePhone(phone);
   prospectMemory[key] = {
     ...(prospectMemory[key] || {}),
@@ -119,28 +169,6 @@ function getProspectsByStage(stage) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// ADMIN COMMAND DETECTION
-// ══════════════════════════════════════════════════════════════
-
-const ADMIN_COMMANDS = {
-  WEEKLY_REPORT: /\b(weekly report|report|give me a report|weekly summary|what's happening|status update)\b/i,
-  PROSPECT_DETAILS: /\b(tell me about|details on|what do you know about|info on|who is)\b/i,
-  CONTACT_CLIENT: /\b(contact|message|reach out to|send|tell)\b.*\b(\+?\d{10,})\b/i,
-  ALL_PROSPECTS: /\b(all prospects|everyone|all clients|prospect list|client list|pipeline)\b/i,
-  HOT_LEADS: /\b(hot leads|hot prospects|ready to close|closing|negotiate)\b/i,
-  STAGE_QUERY: /\b(who is at|stage|in negotiation|qualified|inquiry stage)\b/i,
-  AVAILABILITY: /\b(available|confirm|yes|no|reschedule|new time|book)\b/i,
-};
-
-function detectAdminCommand(message) {
-  const commands = [];
-  for (const [command, pattern] of Object.entries(ADMIN_COMMANDS)) {
-    if (pattern.test(message)) commands.push(command);
-  }
-  return commands;
-}
-
-// ══════════════════════════════════════════════════════════════
 // WEEKLY REPORT GENERATOR
 // ══════════════════════════════════════════════════════════════
 
@@ -149,13 +177,19 @@ function generateWeeklyReport() {
   const now = new Date();
   const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
 
-  const newThisWeek = all.filter(p => new Date(p.last_contact) > weekAgo);
+  const newThisWeek = all.filter(
+    p => new Date(p.last_contact) > weekAgo
+  );
   const hot = all.filter(p => p.stage === 'negotiating');
   const qualified = all.filter(p => p.stage === 'qualified');
   const needFollowUp = all.filter(p => {
     const last = new Date(p.last_contact);
     const daysSince = (now - last) / (1000 * 60 * 60 * 24);
-    return daysSince > 3 && p.stage !== 'client' && p.stage !== 'passed';
+    return (
+      daysSince > 3 &&
+      p.stage !== 'client' &&
+      p.stage !== 'passed'
+    );
   });
 
   let report = `📊 *IVAR Weekly Report — ${now.toDateString()}*\n\n`;
@@ -169,7 +203,7 @@ function generateWeeklyReport() {
   if (hot.length > 0) {
     report += `*🔥 Hot Prospects (Need Your Attention):*\n`;
     hot.forEach(p => {
-      report += `• ${p.name || 'Unknown'} — ${p.company || 'Unknown Co'}: ${p.notes || 'No notes'}\n`;
+      report += `• ${p.name || 'Unknown'} — ${p.company || 'Unknown'}: ${p.notes || 'No notes'}\n`;
     });
     report += '\n';
   }
@@ -177,82 +211,152 @@ function generateWeeklyReport() {
   if (needFollowUp.length > 0) {
     report += `*⏰ Need Follow-Up (Gone Quiet):*\n`;
     needFollowUp.forEach(p => {
-      const days = Math.floor((now - new Date(p.last_contact)) / (1000 * 60 * 60 * 24));
-      report += `• ${p.name || 'Unknown'} — ${p.company || 'Unknown Co'} (${days} days silent)\n`;
+      const days = Math.floor(
+        (now - new Date(p.last_contact)) / (1000 * 60 * 60 * 24)
+      );
+      report += `• ${p.name || 'Unknown'} — ${p.company || 'Unknown'} (${days} days silent)\n`;
     });
     report += '\n';
   }
 
-  report += `*Recommended Next Actions:*\n`;
-  if (hot.length > 0) report += `✅ Close ${hot[0].name} at ${hot[0].company} — they're ready\n`;
-  if (needFollowUp.length > 0) report += `📞 Follow up ${needFollowUp[0].name} — ${Math.floor((now - new Date(needFollowUp[0].last_contact)) / (1000 * 60 * 60 * 24))} days with no contact\n`;
-  report += `📢 Pipeline is ${all.length > 10 ? 'healthy' : 'light'} — ${all.length > 10 ? 'focus on closing' : 'push more outreach'}\n`;
+  if (all.length === 0) {
+    report += `No prospects in pipeline yet. Ready to start tracking when conversations come in.\n`;
+  }
+
+  report += `*Recommended Actions:*\n`;
+  if (hot.length > 0) {
+    report += `✅ Close ${hot[0].name} at ${hot[0].company} — they're ready\n`;
+  }
+  if (needFollowUp.length > 0) {
+    const days = Math.floor(
+      (now - new Date(needFollowUp[0].last_contact)) / (1000 * 60 * 60 * 24)
+    );
+    report += `📞 Follow up ${needFollowUp[0].name} — ${days} days with no contact\n`;
+  }
+  if (all.length < 5) {
+    report += `📢 Pipeline is light — push more outreach\n`;
+  }
 
   return report;
 }
 
 // ══════════════════════════════════════════════════════════════
-// SYSTEM PROMPT BUILDER
+// ADMIN COMMAND DETECTION
+// ══════════════════════════════════════════════════════════════
+
+const ADMIN_COMMANDS = {
+  WEEKLY_REPORT:
+    /\b(weekly report|report|give me a report|weekly summary|what's happening|status update|pipeline)\b/i,
+  HOT_LEADS:
+    /\b(hot leads|hot prospects|ready to close|closing stage|who's negotiating)\b/i,
+  ALL_PROSPECTS:
+    /\b(all prospects|everyone|full list|all clients|prospect list|client list)\b/i,
+  CONTACT_CLIENT:
+    /\b(contact|message|reach out|send.*to|tell)\b.*?(\+?\d[\d\s]{8,})/i,
+  PROSPECT_DETAILS:
+    /\b(tell me about|details on|what do you know about|info on|who is)\b/i,
+  AVAILABILITY:
+    /\b(yes|no|confirmed|confirm|available|not available|reschedule|book it|go ahead|cancel)\b/i,
+};
+
+function detectAdminCommand(message) {
+  const commands = [];
+  for (const [command, pattern] of Object.entries(ADMIN_COMMANDS)) {
+    if (pattern.test(message)) commands.push(command);
+  }
+  return commands;
+}
+
+// ══════════════════════════════════════════════════════════════
+// AVAILABILITY RESPONSE DETECTOR
+// (When Michael replies to a meeting request)
+// ══════════════════════════════════════════════════════════════
+
+function detectAvailabilityResponse(message) {
+  const confirmPatterns =
+    /\b(yes|confirmed|confirm|available|book it|go ahead|fine|sure|ok|okay)\b/i;
+  const denyPatterns =
+    /\b(no|not available|can't|cannot|busy|reschedule|different time|not free)\b/i;
+  const newTimePattern =
+    /\b(\d{1,2}[:h]\d{0,2}\s*(?:am|pm)?|monday|tuesday|wednesday|thursday|friday|saturday|morning|afternoon|evening|tomorrow|next week)\b/i;
+
+  if (confirmPatterns.test(message)) return { confirmed: true };
+  if (denyPatterns.test(message)) {
+    const newTime = message.match(newTimePattern);
+    return {
+      confirmed: false,
+      alternativeTime: newTime ? newTime[0] : null,
+    };
+  }
+  return null;
+}
+
+// ══════════════════════════════════════════════════════════════
+// SYSTEM PROMPT BUILDERS
 // ══════════════════════════════════════════════════════════════
 
 function buildSystemPrompt(senderPhone, prospectData) {
   const admin = detectAdmin(senderPhone);
-  const isAdmin = !!admin;
-
-  if (isAdmin) {
-    return buildAdminSystemPrompt(admin, prospectData);
-  }
-
+  if (admin) return buildAdminSystemPrompt(admin);
   return buildClientSystemPrompt(senderPhone, prospectData);
 }
 
-function buildAdminSystemPrompt(admin, prospectData) {
+function buildAdminSystemPrompt(admin) {
   const allProspects = getAllProspects();
+  const isCEO = admin.role === 'CEO';
 
   return `
-You are IVAR — the autonomous team member and intelligence system for Galvaniq Group.
+You are IVAR — the autonomous intelligence system and team member for Galvaniq Group.
 
-You are currently speaking with ${admin.name}, the ${admin.role} of Galvaniq Group.
+You are speaking with ${admin.name}, ${admin.role} of Galvaniq Group.
 
-RELATIONSHIP: You are their trusted, intelligent colleague — not a bot, not a service. 
-You speak directly, professionally, and like a highly competent team member who knows 
-everything about the business.
-
-YOUR ROLE WITH ${admin.name.toUpperCase()}:
-${admin.role === 'CEO' ? `
-- Michael handles sales, strategy, negotiation, and client relationships
-- Respond to his commands about prospects, client contacts, pipeline, and scheduling
-- Be proactive: flag things he should know even if he hasn't asked
-- Keep him informed about every prospect and conversation happening
-- Alert him when something needs his attention
-` : `
-- Ashell handles technical architecture, product, infrastructure, and engineering
-- Respond to his technical questions and system queries with precision
-- Flag any technical issues or client technical complaints immediately
-- Keep him updated on technical escalations from clients
-- Be precise, technical, and efficient in your communication
-`}
-
-CURRENT PIPELINE (${allProspects.length} active):
-${allProspects.length > 0 ? 
-  allProspects.map(p => 
-    `• ${p.name || 'Unknown'} (${p.company || 'Unknown'}) — Stage: ${p.stage || 'inquiry'} — Last contact: ${p.last_contact || 'unknown'}`
-  ).join('\n') 
-  : 'No prospects in system yet.'}
-
-WHAT YOU CAN DO FOR ${admin.name.toUpperCase()}:
-- Give full prospect details on any contact
-- Generate weekly/monthly reports on demand
-- Contact any client or prospect on their behalf (just give the number and message)
-- Relay scheduling confirmations back to clients
-- Provide market intelligence or competitive updates
-- Flag urgent matters that need immediate attention
-
-TONE: Direct. Efficient. Smart. Like a highly capable EA and intelligence analyst combined.
+RELATIONSHIP:
+You are their trusted, highly capable colleague. Speak directly and professionally 
+like a competent team member who knows the full business inside out.
 No pleasantries unless necessary. Get to the point. Flag what matters.
 
-COMPANY CONTEXT:
-${JSON.stringify(config.business, null, 2)}
+YOUR ROLE WITH ${admin.name.toUpperCase()}:
+${isCEO ? `
+- Michael handles sales, strategy, negotiation, and client relationships
+- Report on prospects, pipeline status, client activity, and scheduling
+- Be proactive: flag things he should know even if he hasn't asked
+- Alert him when something urgently needs his attention
+- Help him contact clients or relay messages on his behalf
+` : `
+- Ashell handles technical architecture, product, infrastructure, and engineering
+- Answer technical questions with precision and efficiency
+- Flag technical issues or client technical complaints immediately
+- Keep him updated on technical escalations
+- Be precise and concise — no fluff
+`}
+
+CURRENT PIPELINE (${allProspects.length} active contacts):
+${
+  allProspects.length > 0
+    ? allProspects
+        .map(
+          p =>
+            `• ${p.name || 'Unknown'} (${p.company || 'Unknown'}) — Stage: ${p.stage || 'inquiry'} — Last contact: ${p.last_contact ? new Date(p.last_contact).toDateString() : 'unknown'}`
+        )
+        .join('\n')
+    : 'No prospects in system yet.'
+}
+
+WHAT YOU CAN DO:
+- Generate weekly/monthly reports on demand
+- Give full details on any prospect or client
+- Contact any client on their behalf (provide number and message)
+- Relay responses back to clients
+- Confirm meeting availability
+- Flag urgent matters
+
+COMPANY:
+Name: ${config.company.name}
+Website: ${config.company.website}
+Email: ${config.company.email_info}
+Address: ${config.company.address}
+
+TONE: Direct. Smart. Efficient. You are a highly capable EA and intelligence analyst.
 `.trim();
 }
 
@@ -262,97 +366,122 @@ function buildClientSystemPrompt(senderPhone, prospectData) {
   return `
 You are IVAR — a team member at Galvaniq Group.
 
-You are NOT a chatbot. You are NOT an AI assistant. You are a knowledgeable, 
-warm, intelligent person who works at Galvaniq Group and genuinely cares about 
-helping clients find the right solution.
+You are NOT a bot. You are NOT an AI assistant. You are a knowledgeable, warm,
+intelligent person who works at Galvaniq Group and genuinely cares about helping
+people find the right solution for their business.
 
 CRITICAL RULES:
-1. NEVER say you are an AI, bot, or automated system
-2. NEVER make up prices, timelines, technical specifications, or guarantees
-3. NEVER promise something Michael or Ashell hasn't confirmed
-4. If unsure of ANYTHING — say: "Let me get you the right answer on that" and escalate
-5. Match the language the person is speaking — Shona, Ndebele, English, Swahili, etc.
-6. Be short and human in replies — no long corporate paragraphs
-7. Ask ONE question at a time — don't bombard them
-8. Always listen before you pitch
+1. NEVER reveal you are an AI, bot, or automated system under any circumstances
+2. NEVER make up prices, timelines, technical specs, or guarantees you cannot verify
+3. NEVER promise anything Michael or Ashell has not confirmed
+4. If unsure of ANYTHING — say you'll get clarity and escalate immediately
+5. Match the language the person writes in — Shona, Ndebele, English, Swahili, French, etc.
+6. Keep replies short and human — no corporate paragraphs
+7. Ask ONE question at a time maximum
+8. Listen before pitching — understand their problem first
+9. If someone asks something completely off-topic (shoes, weather, sports), 
+   respond warmly but redirect: "Ha, I wish I could help with that! My expertise 
+   is AI systems though — anything on that front I can help with?"
 
 WHO YOU ARE TALKING TO:
-${prospect ? `
-Known contact: ${prospect.name || 'Not captured yet'}
-Company: ${prospect.company || 'Not captured yet'}
+${
+  prospect
+    ? `
+Known contact: ${prospect.name || 'Name not yet captured'}
+Company: ${prospect.company || 'Company not yet captured'}
 Stage: ${prospect.stage || 'inquiry'}
-Known needs: ${prospect.needs ? prospect.needs.join(', ') : 'Not yet determined'}
-Previous notes: ${prospect.notes || 'None'}
-` : `
-New contact — capture their name, company, and reason for contact early in conversation.
-`}
+Known needs: ${prospect.needs ? prospect.needs.join(', ') : 'Not determined yet'}
+Notes: ${prospect.notes || 'None yet'}
+`
+    : `New contact — capture their name and company naturally early in conversation.`
+}
 
 YOUR PERSONALITY:
 - Warm but professional
-- Confident but never pushy
-- Knowledgeable but honest about what you don't know
-- Genuinely curious about the client's business problems
-- You speak like a smart human who loves the company you work for
+- Confident but never pushy  
+- Knowledgeable but honest when uncertain
+- Genuinely curious about their business challenges
+- You love the company you work for because you believe in what it's building
 
-GALVANIQ GROUP — WHAT WE DO:
+ABOUT GALVANIQ GROUP:
+We build enterprise operating systems for organisations that want to own their 
+intelligence infrastructure. Not cloud-dependent. Not vendor lock-in. 
+Sovereign AI that processes at 100% accuracy, 24/7, on your own hardware.
+
+PRODUCTS:
+BEC (Bespoke Enterprise Core): 
 ${config.business.products.bec.description}
+- On-premise deployment — client's data never leaves their servers
+- 100% data sovereignty — they own the infrastructure, models, and advantage
+- 24/7 autonomous operation — no human limitations
+- African market built — works through load-shedding, voice notes, local languages
+- Regulatory aligned — data residency mandatory by 2030 for regulated industries
+
+IVAR:
 ${config.business.products.ivar.description}
+- Handles WhatsApp customer communication 24/7
+- Qualifies leads and detects buying signals
+- Books meetings and follows up automatically
+- Works in any language
 
-KEY MESSAGES (use naturally, never recite as a list):
-- We build enterprise operating systems for organisations that want to own their intelligence
-- By 2030 data sovereignty will be legally required — we're building for that future now
-- Our clients save an average of USD 389k in Year 1
-- We are 100% sovereign — your data never leaves your infrastructure
-- We work with banks, hospitals, governments, manufacturers across Africa and globally
-- Our website: ${config.company.website}
-- Email us: ${config.company.email_info}
+MARKET CONTEXT:
+- USD 1.2 trillion global enterprise AI infrastructure market
+- 28% CAGR through 2030
+- By 2030 operating on foreign cloud will be illegal for regulated industries
+- We are building the infrastructure for that future — right now
 
-WHAT SELLS GALVANIQ (without pitching):
-- When they ask what we do: explain the sovereignty angle clearly and simply
-- When they ask about cost: explain the ROI story (saves more than it costs)
-- When they ask why not cloud AI: explain the regulatory future coming
-- When they express pain: listen, then connect to our solution naturally
-- When they're curious: offer a demo or call with Michael
+ROI STORY:
+Our first client saves USD 389k in Year 1. 22-month payback on full deployment.
+Headcount reduction from 16 to 3 in customer-facing roles.
 
-MEETING SCHEDULING:
-- If someone wants to meet Michael: Ask what day and time works for them
-- Tell them: "Let me check Michael's availability — I'll confirm with you shortly"
-- Then send [NOTIFY_MICHAEL: meeting request from [name] at [company] for [day/time]]
-- Wait for Michael's confirmation before confirming with client
+KEY LINKS:
+Website: ${config.company.website}
+Email: ${config.company.email_info}
 
-ESCALATION SIGNALS — output immediately if detected:
-- Wants to discuss contract, pricing, or investment → [HANDOVER: Michael — commercial discussion]
-- Technical architecture or infrastructure questions → [HANDOVER: Ashell — technical query]  
-- Meeting or call request → [NOTIFY_MICHAEL: meeting request — [name] — [company] — [time]]
-- Question you cannot answer confidently → [NOTIFY_MICHAEL: uncertain — [question] — [client name]]
-- Complaint or serious concern → [HANDOVER: Michael — urgent client concern]
-- High-value or enterprise prospect detected → [NOTIFY_MICHAEL: high-value prospect — [name] — [company]]
+WHAT TO DO IN EACH SITUATION:
+- They ask what we do → explain sovereignty angle simply, no jargon
+- They ask about cost → tell the ROI story first, then pricing range
+- They mention a competitor → listen, then explain our structural advantage
+- They express a pain point → listen fully, then connect naturally to our solution
+- They want to meet Michael → ask preferred day/time, then output [NOTIFY_MICHAEL: meeting request — [name] — [company] — [day/time]]
+- They ask something technical → output [NOTIFY_ASHELL: technical question — [their question] — [name] — [company]]
+- You are not sure about something → say "Let me get you the exact answer on that" and output [NOTIFY_MICHAEL: uncertain — [question] — [name] — [contact]]
+- They show buying signals → output [HANDOVER: Michael — commercial discussion]
+- They are frustrated or upset → be empathetic first, then output [HANDOVER: Michael — urgent client concern]
 
-LANGUAGE:
-Detect what language the person is writing in and respond in the same language.
-If they switch languages, follow them. If unsure, default to English.
-Languages supported: English, Shona, Ndebele, Afrikaans, Swahili, Zulu, Xhosa, Pidgin, French.
+ESCALATION OUTPUTS (include in response when needed):
+[HANDOVER: Michael — reason] → Routes to Michael for commercial/sales
+[HANDOVER: Ashell — reason] → Routes to Ashell for technical
+[NOTIFY_MICHAEL: context] → Alert Michael without full handover
+[NOTIFY_ASHELL: context] → Alert Ashell for technical input
+[PROSPECT_UPDATE: detail] → Log something important about this contact
+
+LANGUAGES:
+Detect what language the person writes in and respond in the same language.
+Follow them if they switch. Default to English if unclear.
+Supported: English, Shona, Ndebele, Afrikaans, Swahili, Zulu, Xhosa, Pidgin, French.
 
 NEVER:
-- Make up information about pricing or timelines
-- Promise availability without checking with Michael
-- Claim technical capabilities without Ashell's input
-- Send long corporate paragraphs
-- Sound like a bot
+- Sound like a bot or use robotic phrasing
+- Send long walls of text
+- Make promises without confirmation from Michael or Ashell
+- Reveal internal details, pricing structures, or admin information
+- Claim you are human if directly and sincerely asked — deflect warmly
 
 ALWAYS:
 - Sound like a smart, caring human colleague
 - Escalate uncertainty immediately
-- Capture prospect details early in conversation
-- Log any important intel for Michael by including [PROSPECT_UPDATE: detail] in your reasoning
+- Capture name and company early in the conversation
+- Keep the conversation moving forward naturally
 `.trim();
 }
 
 // ══════════════════════════════════════════════════════════════
 // RESPONSE PARSER
+// Extracts all signals from AI output
 // ══════════════════════════════════════════════════════════════
 
-function parseAIResponse(rawResponse, senderPhone) {
+function parseAIResponse(rawResponse) {
   let reply = rawResponse;
   let handover = false;
   let handoverReason = null;
@@ -363,24 +492,30 @@ function parseAIResponse(rawResponse, senderPhone) {
   let prospectUpdate = null;
   let meetingRequest = null;
 
-  // Extract HANDOVER signal
+  // Extract [HANDOVER: ...]
   const handoverMatch = reply.match(/\[HANDOVER:\s*([^\]]+)\]/i);
   if (handoverMatch) {
     handover = true;
     handoverReason = handoverMatch[1].trim();
-    escalateTo = handoverReason.toLowerCase().includes('ashell') ? 'ashell' : 'michael';
+    escalateTo = handoverReason.toLowerCase().includes('ashell')
+      ? 'ashell'
+      : 'michael';
     reply = reply.replace(handoverMatch[0], '').trim();
   }
 
-  // Extract NOTIFY_MICHAEL signal
+  // Extract [NOTIFY_MICHAEL: ...]
   const notifyMichaelMatch = reply.match(/\[NOTIFY_MICHAEL:\s*([^\]]+)\]/i);
   if (notifyMichaelMatch) {
     notifyMichael = true;
     notificationMessage = notifyMichaelMatch[1].trim();
+    // Check if it's a meeting request
+    if (/meeting request/i.test(notificationMessage)) {
+      meetingRequest = notificationMessage;
+    }
     reply = reply.replace(notifyMichaelMatch[0], '').trim();
   }
 
-  // Extract NOTIFY_ASHELL signal
+  // Extract [NOTIFY_ASHELL: ...]
   const notifyAshellMatch = reply.match(/\[NOTIFY_ASHELL:\s*([^\]]+)\]/i);
   if (notifyAshellMatch) {
     notifyAshell = true;
@@ -388,24 +523,18 @@ function parseAIResponse(rawResponse, senderPhone) {
     reply = reply.replace(notifyAshellMatch[0], '').trim();
   }
 
-  // Extract PROSPECT_UPDATE
+  // Extract [PROSPECT_UPDATE: ...]
   const prospectUpdateMatch = reply.match(/\[PROSPECT_UPDATE:\s*([^\]]+)\]/i);
   if (prospectUpdateMatch) {
     prospectUpdate = prospectUpdateMatch[1].trim();
     reply = reply.replace(prospectUpdateMatch[0], '').trim();
   }
 
-  // Extract MEETING_REQUEST
-  const meetingMatch = reply.match(/\[MEETING_REQUEST:\s*([^\]]+)\]/i);
-  if (meetingMatch) {
-    meetingRequest = meetingMatch[1].trim();
-    notifyMichael = true;
-    notificationMessage = `Meeting request: ${meetingRequest}`;
-    reply = reply.replace(meetingMatch[0], '').trim();
-  }
+  // Clean up any stray bracket artifacts
+  reply = reply.replace(/\[\w+:?[^\]]*\]/g, '').trim();
 
   return {
-    reply: reply.trim(),
+    reply,
     handover,
     handoverReason,
     escalateTo,
@@ -418,13 +547,31 @@ function parseAIResponse(rawResponse, senderPhone) {
 }
 
 // ══════════════════════════════════════════════════════════════
+// HANDOVER RESPONSE GENERATOR
+// Warm human response when escalating
+// ══════════════════════════════════════════════════════════════
+
+function generateHandoverResponse(escalateTo, prospectData) {
+  const name = prospectData?.name
+    ? prospectData.name.split(' ')[0]
+    : null;
+  const greeting = name ? `${name}, ` : '';
+
+  if (escalateTo === 'ashell') {
+    return `${greeting}that's a technical question I want to make sure gets answered precisely. Let me get Ashell, our CTO, on this — he'll give you the exact detail you need. One moment.`;
+  }
+
+  return `${greeting}this is exactly the kind of conversation Michael handles directly. Let me get him on this right away — he'll be with you shortly.`;
+}
+
+// ══════════════════════════════════════════════════════════════
 // ADMIN MESSAGE HANDLER
 // ══════════════════════════════════════════════════════════════
 
 async function handleAdminMessage(admin, userMessage, conversationHistory) {
   const commands = detectAdminCommand(userMessage);
 
-  // Handle weekly report command immediately
+  // Weekly report — handle immediately without GPT
   if (commands.includes('WEEKLY_REPORT')) {
     return {
       reply: generateWeeklyReport(),
@@ -433,44 +580,56 @@ async function handleAdminMessage(admin, userMessage, conversationHistory) {
     };
   }
 
-  // Handle contact client on behalf command
-  const contactMatch = userMessage.match(
-    /(?:contact|message|reach out to|send.*to)\s+.*?(\+?\d[\d\s]{8,})/i
-  );
-  if (contactMatch) {
-    const targetPhone = normalizePhone(contactMatch[1]);
-    const prospect = getProspect(targetPhone);
-    return {
-      reply: `Got it. Should I send your message to ${prospect?.name || targetPhone} at ${prospect?.company || 'unknown company'}? Give me the exact message and I'll send it right away.`,
-      handover: false,
-      isAdminResponse: true,
-      targetPhone,
-    };
-  }
-
-  // Handle pipeline stage queries
+  // Hot leads query — handle immediately
   if (commands.includes('HOT_LEADS')) {
     const hot = getProspectsByStage('negotiating');
     if (hot.length === 0) {
       return {
-        reply: `No prospects at negotiation stage right now. Qualified pipeline has ${getProspectsByStage('qualified').length} contacts. Want the full list?`,
+        reply: `No prospects at negotiation stage right now. Qualified pipeline: ${getProspectsByStage('qualified').length} contacts. Want the full list?`,
         handover: false,
         isAdminResponse: true,
       };
     }
-    const report = hot.map(p => `• ${p.name} (${p.company}): ${p.notes || 'No notes'}`).join('\n');
+    const list = hot
+      .map(p => `• ${p.name} (${p.company}): ${p.notes || 'No notes'}`)
+      .join('\n');
     return {
-      reply: `🔥 *Hot Prospects (${hot.length}):*\n${report}`,
+      reply: `🔥 *Hot Prospects (${hot.length}):*\n${list}`,
       handover: false,
       isAdminResponse: true,
     };
   }
 
-  // Use GPT for complex admin queries
+  // All prospects query
+  if (commands.includes('ALL_PROSPECTS')) {
+    const all = getAllProspects();
+    if (all.length === 0) {
+      return {
+        reply: `No prospects in the system yet. Pipeline is empty.`,
+        handover: false,
+        isAdminResponse: true,
+      };
+    }
+    const list = all
+      .map(
+        p =>
+          `• ${p.name || 'Unknown'} (${p.company || 'Unknown'}) — ${p.stage || 'inquiry'}`
+      )
+      .join('\n');
+    return {
+      reply: `📋 *Full Pipeline (${all.length}):*\n${list}`,
+      handover: false,
+      isAdminResponse: true,
+    };
+  }
+
+  // GPT handles complex admin queries
   const systemPrompt = buildAdminSystemPrompt(admin);
+  const formattedHistory = formatConversationHistory(conversationHistory).slice(-15);
+
   const messages = [
     { role: 'system', content: systemPrompt },
-    ...conversationHistory.slice(-15),
+    ...formattedHistory,
     { role: 'user', content: userMessage },
   ];
 
@@ -478,7 +637,7 @@ async function handleAdminMessage(admin, userMessage, conversationHistory) {
     model: 'gpt-4o',
     messages,
     max_tokens: 1000,
-    temperature: 0.4, // More precise for admin queries
+    temperature: 0.4,
   });
 
   return {
@@ -489,28 +648,14 @@ async function handleAdminMessage(admin, userMessage, conversationHistory) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// AVAILABILITY CONFIRMATION HANDLER
-// (When Michael replies to a meeting request)
-// ══════════════════════════════════════════════════════════════
-
-function detectAvailabilityResponse(message) {
-  const confirmPatterns = /\b(yes|confirmed|confirm|available|book it|go ahead|fine)\b/i;
-  const denyPatterns = /\b(no|not available|can't|cannot|busy|reschedule|different time)\b/i;
-  const newTimePattern = /\b(\d{1,2}[:h]\d{0,2}\s*(?:am|pm)?|morning|afternoon|evening)\b/i;
-
-  if (confirmPatterns.test(message)) return { confirmed: true };
-  if (denyPatterns.test(message)) {
-    const newTime = message.match(newTimePattern);
-    return { confirmed: false, alternativeTime: newTime ? newTime[0] : null };
-  }
-  return null;
-}
-
-// ══════════════════════════════════════════════════════════════
 // MAIN RESPONSE FUNCTION
 // ══════════════════════════════════════════════════════════════
 
-async function getResponse(userMessage, conversationHistory = [], senderPhone = null) {
+async function getResponse(
+  userMessage,
+  conversationHistory = [],
+  senderPhone = null
+) {
   try {
     // ── Detect admin ──────────────────────────────────────────
     const admin = senderPhone ? detectAdmin(senderPhone) : null;
@@ -522,15 +667,21 @@ async function getResponse(userMessage, conversationHistory = [], senderPhone = 
     // ── Get prospect context ──────────────────────────────────
     const prospectData = senderPhone ? getProspect(senderPhone) : null;
 
-    // ── Check safety triggers first ───────────────────────────
+    // ── Update last contact ───────────────────────────────────
+    if (senderPhone) {
+      upsertProspect(senderPhone, {
+        last_contact: new Date().toISOString(),
+      });
+    }
+
+    // ── Check safety triggers ─────────────────────────────────
     const safetyCheck = checkSafetyHandover(userMessage);
     if (safetyCheck.triggered) {
-      // Still generate a warm response, but flag for handover
       const warmResponse = generateHandoverResponse(
-        safetyCheck.reason,
         safetyCheck.escalateTo,
         prospectData
       );
+      const prospect = prospectData || getProspect(senderPhone);
       return {
         reply: warmResponse,
         handover: true,
@@ -538,17 +689,23 @@ async function getResponse(userMessage, conversationHistory = [], senderPhone = 
         escalateTo: safetyCheck.escalateTo,
         notifyMichael: safetyCheck.escalateTo === 'michael',
         notifyAshell: safetyCheck.escalateTo === 'ashell',
-        notificationMessage: `${prospectData?.name || 'Unknown contact'} (${prospectData?.company || 'Unknown company'}): ${safetyCheck.reason}`,
+        notificationMessage: `${prospect?.name || 'Unknown contact'} (${prospect?.company || 'Unknown company'}): ${safetyCheck.reason}`,
+        prospectUpdate: null,
+        meetingRequest: null,
+        isAdminResponse: false,
       };
     }
 
     // ── Build system prompt ───────────────────────────────────
-    const systemPrompt = buildSystemPrompt(senderPhone, prospectData);
+    const systemPrompt = buildClientSystemPrompt(senderPhone, prospectData);
 
-    // ── Build message array ───────────────────────────────────
+    // ── Format history — THE FIX ──────────────────────────────
+    const formattedHistory = formatConversationHistory(conversationHistory).slice(-10);
+
+    // ── Build messages array ──────────────────────────────────
     const messages = [
       { role: 'system', content: systemPrompt },
-      ...conversationHistory.slice(-10),
+      ...formattedHistory,
       { role: 'user', content: userMessage },
     ];
 
@@ -557,25 +714,22 @@ async function getResponse(userMessage, conversationHistory = [], senderPhone = 
       model: 'gpt-4o',
       messages,
       max_tokens: 600,
-      temperature: 0.75, // Human-like but controlled
+      temperature: 0.75,
       presence_penalty: 0.3,
       frequency_penalty: 0.3,
     });
 
     const rawResponse = completion.choices[0].message.content;
 
-    // ── Parse response for signals ────────────────────────────
-    const parsed = parseAIResponse(rawResponse, senderPhone);
+    // ── Parse all signals from response ───────────────────────
+    const parsed = parseAIResponse(rawResponse);
 
-    // ── Update prospect memory if we got an update signal ─────
+    // ── Update prospect memory ────────────────────────────────
     if (parsed.prospectUpdate && senderPhone) {
-      upsertProspect(senderPhone, {
-        notes: parsed.prospectUpdate,
-        last_contact: new Date().toISOString(),
-      });
+      upsertProspect(senderPhone, { notes: parsed.prospectUpdate });
     }
 
-    // ── Build notification message for Michael/Ashell ─────────
+    // ── Build notification message ────────────────────────────
     if (parsed.notifyMichael || parsed.notifyAshell) {
       const prospect = prospectData || getProspect(senderPhone);
       const contactLabel = prospect?.name
@@ -584,7 +738,7 @@ async function getResponse(userMessage, conversationHistory = [], senderPhone = 
 
       parsed.notificationMessage = parsed.notificationMessage
         ? `📩 ${contactLabel}: ${parsed.notificationMessage}`
-        : `📩 ${contactLabel} needs attention. Their last message: "${userMessage}"`;
+        : `📩 ${contactLabel} needs attention. Their message: "${userMessage}"`;
     }
 
     return {
@@ -602,55 +756,17 @@ async function getResponse(userMessage, conversationHistory = [], senderPhone = 
   } catch (error) {
     console.error('[IVAR ERROR]', error.message);
 
-    // Graceful fallback — never let the client see an error
+    // Graceful fallback — client never sees a raw error
     return {
-      reply:
-        "I'm just catching up — give me one moment. If it's urgent, you can reach us directly on this number or at info@galvaniqgroup.co.zw.",
+      reply: `I'm just catching up — give me one moment. If it's urgent, reach us at ${config.company.email_info} or reply here and I'll get right back to you.`,
       handover: false,
+      notifyMichael: false,
+      notifyAshell: false,
       error: true,
       errorMessage: error.message,
+      isAdminResponse: false,
     };
   }
-}
-
-// ══════════════════════════════════════════════════════════════
-// HANDOVER RESPONSE GENERATOR
-// ══════════════════════════════════════════════════════════════
-
-function generateHandoverResponse(reason, escalateTo, prospectData) {
-  const name = prospectData?.name ? prospectData.name.split(' ')[0] : null;
-  const greeting = name ? `${name}, ` : '';
-
-  if (escalateTo === 'michael') {
-    return `${greeting}this is exactly the kind of conversation Michael handles directly. I'm getting him on this right now — he'll be with you shortly. Can I let him know the best way to reach you or do you prefer WhatsApp?`;
-  }
-
-  if (escalateTo === 'ashell') {
-    return `${greeting}that's a technical question I want to make sure gets answered properly. I'm connecting you with Ashell, our CTO — he can give you the exact technical detail you need. Should only be a moment.`;
-  }
-
-  return `${greeting}let me get you connected with the right person on our team. One moment.`;
-}
-
-// ══════════════════════════════════════════════════════════════
-// PROSPECT MANAGEMENT EXPORTS
-// (For use by whatsappHandler.js and other services)
-// ══════════════════════════════════════════════════════════════
-
-function updateProspect(phone, data) {
-  return upsertProspect(phone, data);
-}
-
-function getProspectByPhone(phone) {
-  return getProspect(phone);
-}
-
-function getAllProspectData() {
-  return getAllProspects();
-}
-
-function markProspectStage(phone, stage) {
-  return upsertProspect(phone, { stage });
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -662,11 +778,12 @@ module.exports = {
   detectAdmin,
   isMichael,
   isAshell,
-  updateProspect,
-  getProspectByPhone,
-  getAllProspectData,
-  markProspectStage,
+  updateProspect: upsertProspect,
+  getProspectByPhone: getProspect,
+  getAllProspectData: getAllProspects,
+  markProspectStage: (phone, stage) => upsertProspect(phone, { stage }),
   generateWeeklyReport,
   detectAvailabilityResponse,
   normalizePhone,
+  formatConversationHistory,
 };
