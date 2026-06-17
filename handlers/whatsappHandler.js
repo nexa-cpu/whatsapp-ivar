@@ -1,5 +1,5 @@
 // handlers/whatsappHandler.js — Galvaniq Group IVAR
-// Fixed: relay flow, actual message sending, phone detection
+// Fixed: state machine, actual sending, real pitch generation
 
 'use strict';
 
@@ -12,10 +12,14 @@ const {
   detectAvailabilityResponse,
   normalizePhone,
   generateWeeklyReport,
+  formatConversationHistory,
 } = require('./aiResponse');
 const { executeHandover } = require('./humanHandover');
-const database = require('../database/mongodb');
-const config = require('../config/client');
+const database = require('./database/mongodb');
+const config = require('./config/client');
+const OpenAI = require('openai');
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // ══════════════════════════════════════════════════════════════
 // ADMIN PHONES
@@ -25,85 +29,74 @@ const MICHAEL_PHONE = normalizePhone(config.admins.michael.phone);
 const ASHELL_PHONE = normalizePhone(config.admins.ashell.phone);
 
 // ══════════════════════════════════════════════════════════════
-// PENDING ACTIONS
-// State machine for admin flows
+// STATE MACHINE
+// Tracks exactly where Michael is in a flow
+// States: IDLE | HAVE_PHONE | DRAFT_SHOWN | MEETING_PENDING | QUESTION_PENDING
 // ══════════════════════════════════════════════════════════════
 
-const pendingActions = {};
+const adminState = {};
 
-function setPending(adminPhone, action) {
-  pendingActions[normalizePhone(adminPhone)] = {
-    ...action,
-    timestamp: Date.now(),
-  };
-}
-
-function getPending(adminPhone) {
+function getState(adminPhone) {
   const key = normalizePhone(adminPhone);
-  const action = pendingActions[key];
-  if (!action) return null;
-  // Expire after 30 minutes
-  if (Date.now() - action.timestamp > 30 * 60 * 1000) {
-    delete pendingActions[key];
-    return null;
+  const state = adminState[key];
+  if (!state) return { state: 'IDLE' };
+  // Expire after 30 minutes of inactivity
+  if (Date.now() - state.updatedAt > 30 * 60 * 1000) {
+    delete adminState[key];
+    return { state: 'IDLE' };
   }
-  return action;
+  return state;
 }
 
-function clearPending(adminPhone) {
-  delete pendingActions[normalizePhone(adminPhone)];
+function setState(adminPhone, data) {
+  const key = normalizePhone(adminPhone);
+  adminState[key] = { ...data, updatedAt: Date.now() };
+}
+
+function clearState(adminPhone) {
+  delete adminState[normalizePhone(adminPhone)];
 }
 
 // ══════════════════════════════════════════════════════════════
-// PHONE NUMBER EXTRACTOR
-// Pulls any phone number out of a message
+// PHONE EXTRACTOR
 // ══════════════════════════════════════════════════════════════
 
 function extractPhone(text) {
-  const match = text.match(/(\+?2637\d{8}|07\d{8}|2637\d{8})/);
+  // Match Zimbabwe numbers in any format
+  const match = text.match(
+    /(\+?263\s?7\d[\s\-]?\d{3}[\s\-]?\d{4}|07\d[\s\-]?\d{3}[\s\-]?\d{4})/
+  );
   if (!match) return null;
-  let phone = match[0].replace(/[\s\-]/g, '');
-  // Normalize to 263XXXXXXXXX format
+  let phone = match[0].replace(/[\s\-\+]/g, '');
   if (phone.startsWith('0')) phone = '263' + phone.slice(1);
-  if (phone.startsWith('+')) phone = phone.slice(1);
   return phone;
 }
 
 // ══════════════════════════════════════════════════════════════
-// MESSAGE INTENT DETECTOR
-// Determines what Michael is trying to do
+// INTENT DETECTOR
 // ══════════════════════════════════════════════════════════════
 
 function detectIntent(message) {
-  const msg = message.toLowerCase();
+  const msg = message.toLowerCase().trim();
 
-  // Confirmation signals
-  if (/\b(send it|send|yes|confirm|go ahead|do it|proceed|ok|okay|sure)\b/.test(msg)) {
+  if (/^(yes|send it|send|go ahead|do it|confirm|proceed|ok|okay|sure|yep|yup|ja|send that|just send)/.test(msg) ||
+      /\b(send it|go ahead|confirmed|yes send|send now|do it)\b/.test(msg)) {
     return 'CONFIRM';
   }
 
-  // Cancellation
-  if (/\b(cancel|stop|abort|don't send|no)\b/.test(msg)) {
+  if (/^(no|cancel|stop|abort|don'?t send|nope|never mind|forget it)/.test(msg) ||
+      /\b(cancel|abort|don'?t send|never mind)\b/.test(msg)) {
     return 'CANCEL';
   }
 
-  // Report request
-  if (/\b(report|update|pipeline|status|weekly|today's update|what's happening)\b/.test(msg)) {
+  if (/\b(report|update|pipeline|status|weekly|today'?s update|what'?s happening|how many|prospects)\b/.test(msg)) {
     return 'REPORT';
   }
 
-  // Meeting availability response
-  if (/\b(yes|no|available|not available|confirm|reschedule|busy)\b/.test(msg)) {
-    return 'AVAILABILITY';
-  }
+  const phone = extractPhone(message);
+  if (phone) return 'HAS_PHONE';
 
-  // Contact a prospect
-  if (extractPhone(message)) {
-    return 'HAS_PHONE';
-  }
-
-  // Message instruction
-  if (/\b(message|send|tell|inform|contact|reach out|let them know)\b/.test(msg)) {
+  if (/\b(send|message|tell|contact|reach out|whatsapp|text)\b/.test(msg)) {
     return 'SEND_INSTRUCTION';
   }
 
@@ -111,293 +104,311 @@ function detectIntent(message) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// GALVANIQ SERVICE PITCH
-// What IVAR sends to prospects on Michael's behalf
+// GPT MESSAGE GENERATOR
+// Writes the actual WhatsApp message to send to a prospect
+// IVAR writes it — not generic templates
 // ══════════════════════════════════════════════════════════════
 
-function buildProspectPitch(prospectName) {
-  const greeting = prospectName ? `Hi ${prospectName.split(' ')[0]}` : 'Hi';
+async function generateProspectMessage(instruction, prospectName = null) {
+  const firstName = prospectName ? prospectName.split(' ')[0] : null;
 
-  return `${greeting}, I'm reaching out from Galvaniq Group.
+  const prompt = `You are writing a WhatsApp message FROM Galvaniq Group TO a cold prospect.
 
-We build sovereign AI infrastructure for organisations that want to own their intelligence — not rent it from cloud providers.
+COMPANY: Galvaniq Group
+PRODUCTS:
+1. BEC (Bespoke Enterprise Core) — an on-premise AI operating system. Organisations own their intelligence infrastructure. No cloud. No foreign servers. 100% data sovereignty. Handles accounting, operations, customer service, and more. 24/7, 100% accurate.
+2. IVAR — AI receptionist on WhatsApp. Handles customer enquiries, qualifies leads, books meetings, works in any language, 24/7.
 
-Our two core products:
+ROI: Clients save USD 389,000 in Year 1. Payback in 22 months. 
+MARKET: USD 1.2T global market. By 2030, data residency will be legally required for regulated industries.
 
-*BEC (Bespoke Enterprise Core)* — an on-premise AI operating system that handles your accounting, operations, customer service, and more. 100% accurate, 24/7, your data never leaves your infrastructure.
+INSTRUCTION FROM MICHAEL: ${instruction}
 
-*IVAR* — an AI team member on WhatsApp that handles customer enquiries, qualifies leads, and books meetings around the clock.
+PROSPECT NAME: ${firstName || 'Unknown (use "Hi there")'}
 
-A client using BEC saves USD 389k in Year 1 alone.
+RULES FOR THE MESSAGE:
+- This is WhatsApp — casual, warm, human. NOT email.
+- NO sign-offs. No "Best regards", "Yours sincerely", "IVAR", "Michael Mukahanana", nothing.
+- NO subject line. Just the message body.
+- Short — 4 to 6 sentences maximum. They haven't heard of us.
+- Open with a genuine greeting not "I hope this message finds you well"
+- Make them curious, not sold to
+- End with ONE simple question or call to action
+- Sound like a real person, not a marketing brochure
+- Do NOT use words like: innovative, solutions, tailored, leverage, synergy, cutting-edge
 
-Would love to show you what this looks like for your business — are you available for a quick chat this week?`;
+Write only the message. Nothing else. No labels, no "Here's the draft:", just the message itself.`;
+
+  const completion = await openai.chat.completions.create({
+    model: 'gpt-4o',
+    messages: [{ role: 'user', content: prompt }],
+    max_tokens: 300,
+    temperature: 0.8,
+  });
+
+  return completion.choices[0].message.content.trim();
 }
 
 // ══════════════════════════════════════════════════════════════
-// ADMIN MESSAGE PROCESSOR
-// Full state machine — no GPT making decisions about sending
+// ADMIN MESSAGE PROCESSOR — STATE MACHINE
 // ══════════════════════════════════════════════════════════════
 
 async function processAdminMessage(from, messageText, messageId) {
   const admin = detectAdmin(from);
-  console.log(`\n👔 Admin message from ${admin.name} (${admin.role}): "${messageText}"`);
+  console.log(`\n👔 ${admin.name} (${admin.role}): "${messageText}"`);
 
   await markAsRead(messageId);
 
-  const pending = getPending(from);
+  const current = getState(from);
   const intent = detectIntent(messageText);
 
-  // ── PENDING: Waiting for meeting confirmation ──────────────
-  if (pending?.type === 'MEETING_CONFIRM') {
+  console.log(`📊 State: ${current.state} | Intent: ${intent}`);
+
+  // ══════════════════════════════════════════════════════════
+  // STATE: MEETING_PENDING
+  // Waiting for Michael to confirm or decline a meeting
+  // ══════════════════════════════════════════════════════════
+
+  if (current.state === 'MEETING_PENDING') {
     const availability = detectAvailabilityResponse(messageText);
 
     if (availability?.confirmed) {
-      // Send confirmation to client
-      const prospect = getProspectByPhone(pending.clientPhone);
-      const clientFirstName = prospect?.name?.split(' ')[0] || '';
+      const prospect = getProspectByPhone(current.clientPhone);
+      const clientFirst = prospect?.name?.split(' ')[0] || '';
 
       await sendWhatsAppMessage(
-        pending.clientPhone,
-        `${clientFirstName ? `Great news, ${clientFirstName}! ` : ''}Michael is available at the time you requested. He'll reach out to confirm the details shortly.`
+        current.clientPhone,
+        `${clientFirst ? `${clientFirst}, great news — ` : 'Great news — '}Michael is available at the time you mentioned. He'll be in touch with the details shortly.`
       );
 
-      await sendWhatsAppMessage(
-        from,
-        `✅ Done. ${prospect?.name || pending.clientPhone} has been told you're available.`
-      );
-
-      updateProspect(pending.clientPhone, { stage: 'meeting_scheduled' });
-      clearPending(from);
+      await sendWhatsAppMessage(from, `✅ Confirmed. ${prospect?.name || current.clientPhone} has been notified.`);
+      updateProspect(current.clientPhone, { stage: 'meeting_scheduled' });
+      clearState(from);
       return;
     }
 
     if (availability?.confirmed === false) {
       if (availability.alternativeTime) {
-        const prospect = getProspectByPhone(pending.clientPhone);
-        const clientFirstName = prospect?.name?.split(' ')[0] || '';
-
+        const prospect = getProspectByPhone(current.clientPhone);
+        const clientFirst = prospect?.name?.split(' ')[0] || '';
         await sendWhatsAppMessage(
-          pending.clientPhone,
-          `Hi ${clientFirstName}, Michael isn't available at that time — he can do ${availability.alternativeTime} instead. Does that work for you?`
+          current.clientPhone,
+          `Hi${clientFirst ? ` ${clientFirst}` : ''}, Michael isn't free at that time but he can do ${availability.alternativeTime} — does that work?`
         );
-
-        await sendWhatsAppMessage(
-          from,
-          `✅ Offered ${availability.alternativeTime} to ${prospect?.name || pending.clientPhone}.`
-        );
-
-        clearPending(from);
+        await sendWhatsAppMessage(from, `✅ Alternative time offered.`);
+        clearState(from);
         return;
       }
-
-      await sendWhatsAppMessage(
-        from,
-        `What alternative time should I offer them?`
-      );
+      await sendWhatsAppMessage(from, `What time should I offer them instead?`);
       return;
     }
+
+    // Not a clear yes/no — fall through to general handling below
   }
 
-  // ── PENDING: Waiting for message content ───────────────────
-  if (pending?.type === 'AWAITING_MESSAGE') {
-    let message = messageText.trim();
+  // ══════════════════════════════════════════════════════════
+  // STATE: QUESTION_PENDING
+  // Michael or Ashell answering a client question
+  // ══════════════════════════════════════════════════════════
 
-    // Remove formal sign-offs if present
-    message = message
-      .replace(/\n*(best regards|regards|sincerely|yours faithfully)[^]*$/i, '')
-      .replace(/\n*[-—]\s*(michael|ashell|galvaniq)[^]*/i, '')
-      .trim();
-
-    // Store the message and ask for confirmation
-    setPending(from, {
-      type: 'AWAITING_CONFIRM',
-      clientPhone: pending.clientPhone,
-      prospectName: pending.prospectName,
-      message,
-    });
-
-    const prospect = getProspectByPhone(pending.clientPhone);
+  if (current.state === 'QUESTION_PENDING') {
+    // Whatever they say is the answer — relay it
+    const prospect = getProspectByPhone(current.clientPhone);
+    const clientFirst = prospect?.name?.split(' ')[0] || '';
 
     await sendWhatsAppMessage(
-      from,
-      `Sending to ${prospect?.name || pending.clientPhone} (+${pending.clientPhone}):\n\n"${message}"\n\nReply *send it* to confirm or *cancel* to abort.`
+      current.clientPhone,
+      `${clientFirst ? `${clientFirst}, ` : ''}just got clarity on that — ${messageText}`
     );
+    await sendWhatsAppMessage(from, `✅ Relayed to ${prospect?.name || current.clientPhone}.`);
+    clearState(from);
     return;
   }
 
-  // ── PENDING: Waiting for send confirmation ─────────────────
-  if (pending?.type === 'AWAITING_CONFIRM') {
-    if (intent === 'CONFIRM') {
-      // ACTUALLY send the message to the prospect
-      try {
-        await sendWhatsAppMessage(pending.clientPhone, pending.message);
+  // ══════════════════════════════════════════════════════════
+  // STATE: DRAFT_SHOWN
+  // Michael has seen the draft. Waiting for confirm, cancel, or feedback.
+  // ══════════════════════════════════════════════════════════
 
-        const prospect = getProspectByPhone(pending.clientPhone);
+  if (current.state === 'DRAFT_SHOWN') {
+
+    // CONFIRM — actually send the message
+    if (intent === 'CONFIRM') {
+      try {
+        // SEND THE MESSAGE — this is the only place where sending happens
+        await sendWhatsAppMessage(current.clientPhone, current.draft);
+
+        console.log(`📤 Outbound message sent to prospect ${current.clientPhone}`);
+
+        // Tell Michael it was sent AFTER it's actually sent
         await sendWhatsAppMessage(
           from,
-          `✅ Sent to ${prospect?.name || pending.clientPhone} (+${pending.clientPhone}). I'll let you know when they reply.`
+          `✅ Sent to +${current.clientPhone}. I'll notify you when they reply.`
         );
 
-        // Log it
+        // Log to database
         await database.saveMessage({
-          from: pending.clientPhone,
-          userMessage: '[Outbound from Michael via IVAR]',
-          aiResponse: pending.message,
-          messageId: `admin_relay_${Date.now()}`,
+          from: current.clientPhone,
+          userMessage: '[Outbound — sent by IVAR on behalf of ' + admin.name + ']',
+          aiResponse: current.draft,
+          messageId: `outbound_${Date.now()}`,
           handoverTriggered: false,
           sentByAdmin: true,
           adminName: admin.name,
-        }).catch(() => {});
+        }).catch(err => console.warn('Log failed (non-critical):', err.message));
 
-        updateProspect(pending.clientPhone, {
+        updateProspect(current.clientPhone, {
           stage: 'contacted',
           last_contact: new Date().toISOString(),
-          notes: `Contacted via IVAR by ${admin.name}`,
+          notes: `Contacted by ${admin.name} via IVAR`,
         });
 
-        clearPending(from);
+        clearState(from);
         return;
       } catch (error) {
-        console.error('❌ Failed to send to prospect:', error.message);
+        console.error(`❌ Failed to send to ${current.clientPhone}:`, error.message);
         await sendWhatsAppMessage(
           from,
-          `❌ Failed to send — ${error.message}. Try again?`
+          `❌ Send failed — ${error.message}. Want me to try again?`
         );
         return;
       }
     }
 
+    // CANCEL
     if (intent === 'CANCEL') {
-      clearPending(from);
-      await sendWhatsAppMessage(from, `Cancelled. Nothing was sent.`);
+      clearState(from);
+      await sendWhatsAppMessage(from, `Cancelled. Nothing was sent to +${current.clientPhone}.`);
       return;
     }
 
-    // They modified the message — update and re-confirm
-    let updatedMessage = messageText.trim()
-      .replace(/\n*(best regards|regards|sincerely)[^]*$/i, '')
-      .replace(/\n*[-—]\s*(michael|ashell|galvaniq)[^]*/i, '')
-      .trim();
+    // FEEDBACK/INSTRUCTION — regenerate the draft
+    try {
+      await sendWhatsAppMessage(from, `Rewriting...`);
 
-    setPending(from, {
-      ...pending,
-      message: updatedMessage,
-    });
+      const prospect = getProspectByPhone(current.clientPhone);
+      const newDraft = await generateProspectMessage(
+        messageText,
+        prospect?.name
+      );
 
-    await sendWhatsAppMessage(
-      from,
-      `Updated. Here's what I'll send:\n\n"${updatedMessage}"\n\nReply *send it* to confirm.`
-    );
-    return;
+      setState(from, {
+        state: 'DRAFT_SHOWN',
+        clientPhone: current.clientPhone,
+        draft: newDraft,
+      });
+
+      await sendWhatsAppMessage(
+        from,
+        `Here's the updated message:\n\n${newDraft}\n\nReply *send it* to confirm or give me more feedback.`
+      );
+      return;
+    } catch (error) {
+      await sendWhatsAppMessage(from, `Couldn't regenerate — ${error.message}. Try again.`);
+      return;
+    }
   }
 
-  // ── NO PENDING — Fresh admin command ───────────────────────
+  // ══════════════════════════════════════════════════════════
+  // STATE: HAVE_PHONE
+  // Have a phone number, waiting for message instruction
+  // ══════════════════════════════════════════════════════════
 
-  // Report request
+  if (current.state === 'HAVE_PHONE') {
+    // If they just said "send" or "pitch" with no extra content, use default pitch
+    const isPitchRequest = /\b(pitch|services|products|introduce|tell them about us|what we do)\b/i.test(messageText);
+    const instruction = isPitchRequest
+      ? 'Introduce Galvaniq Group and make them want to learn more about BEC and IVAR. Keep it conversational.'
+      : messageText;
+
+    try {
+      await sendWhatsAppMessage(from, `Got it, writing now...`);
+
+      const prospect = getProspectByPhone(current.clientPhone);
+      const draft = await generateProspectMessage(instruction, prospect?.name);
+
+      setState(from, {
+        state: 'DRAFT_SHOWN',
+        clientPhone: current.clientPhone,
+        draft,
+      });
+
+      await sendWhatsAppMessage(
+        from,
+        `Here's what I'll send to +${current.clientPhone}:\n\n${draft}\n\nReply *send it* to confirm, *cancel* to abort, or tell me what to change.`
+      );
+      return;
+    } catch (error) {
+      await sendWhatsAppMessage(from, `Couldn't generate the message — ${error.message}. Try again.`);
+      return;
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // STATE: IDLE — Fresh commands
+  // ══════════════════════════════════════════════════════════
+
+  // Report
   if (intent === 'REPORT') {
     await sendWhatsAppMessage(from, generateWeeklyReport());
     return;
   }
 
-  // Phone number in message — store as active prospect
+  // Phone number in message
   if (intent === 'HAS_PHONE') {
-    const targetPhone = extractPhone(messageText);
-    if (targetPhone) {
-      const prospect = getProspectByPhone(targetPhone);
+    const phone = extractPhone(messageText);
+    if (phone) {
+      const prospect = getProspectByPhone(phone);
 
-      // Check if there's also a send instruction in the same message
-      const hasSendInstruction =
-        /\b(message|send|tell|contact|reach out|inform)\b/i.test(messageText);
+      // Check if they also gave a send instruction in the same message
+      const hasSendInstruction = /\b(send|message|tell|contact|reach out|introduce)\b/i.test(messageText);
 
       if (hasSendInstruction) {
-        // Check if they specified what to say
-        const hasContent =
-          messageText.replace(/\+?\d[\d\s]{8,}/g, '').replace(/\b(contact|message|send|tell|reach out|inform|them|him|her)\b/gi, '').trim().length > 5;
+        // They gave a phone AND an instruction in one message
+        // Extract the instruction (strip the phone number out)
+        const instruction = messageText.replace(/\+?263\s?7\d[\s\-]?\d{3}[\s\-]?\d{4}|07\d[\s\-]?\d{3}[\s\-]?\d{4}/g, '').trim();
 
-        if (hasContent) {
-          // Extract message content (everything that's not the instruction or phone)
-          let msgContent = messageText
-            .replace(/\+?\d[\d\s]{8,}/g, '')
-            .replace(/\b(contact|message|send|tell|reach out|inform|them|him|her|about|our services|and)\b/gi, '')
-            .trim();
+        setState(from, { state: 'HAVE_PHONE', clientPhone: phone });
 
-          if (msgContent.length < 10) {
-            // Too vague — use the default pitch
-            msgContent = buildProspectPitch(prospect?.name);
-          }
+        try {
+          await sendWhatsAppMessage(from, `Writing message for +${phone}...`);
 
-          setPending(from, {
-            type: 'AWAITING_CONFIRM',
-            clientPhone: targetPhone,
-            prospectName: prospect?.name || null,
-            message: msgContent,
-          });
+          const draft = await generateProspectMessage(
+            instruction.length > 10 ? instruction : 'Introduce Galvaniq Group and make them curious about BEC and IVAR.',
+            prospect?.name
+          );
+
+          setState(from, { state: 'DRAFT_SHOWN', clientPhone: phone, draft });
 
           await sendWhatsAppMessage(
             from,
-            `Sending to ${prospect?.name || `+${targetPhone}`}:\n\n"${msgContent}"\n\nReply *send it* to confirm or *cancel* to abort.`
+            `Here's what I'll send to +${phone}:\n\n${draft}\n\nReply *send it* to confirm, *cancel* to abort, or tell me what to change.`
           );
-        } else {
-          // They want to send but didn't say what — use pitch or ask
-          const pitch = buildProspectPitch(prospect?.name);
-
-          setPending(from, {
-            type: 'AWAITING_CONFIRM',
-            clientPhone: targetPhone,
-            prospectName: prospect?.name || null,
-            message: pitch,
-          });
-
-          await sendWhatsAppMessage(
-            from,
-            `Here's what I'll send to ${prospect?.name || `+${targetPhone}`}:\n\n"${pitch}"\n\nReply *send it* to confirm, *cancel* to abort, or send me your own message and I'll use that instead.`
-          );
+        } catch (error) {
+          await sendWhatsAppMessage(from, `Couldn't generate the message — ${error.message}`);
         }
       } else {
-        // Phone number with no instruction — store and ask what to do
-        setPending(from, {
-          type: 'AWAITING_MESSAGE',
-          clientPhone: targetPhone,
-          prospectName: prospect?.name || null,
-        });
-
+        // Just a phone number — ask what to do
+        setState(from, { state: 'HAVE_PHONE', clientPhone: phone });
         await sendWhatsAppMessage(
           from,
-          `Got the number${prospect?.name ? ` — ${prospect.name}` : ''}. What should I send them? Or reply *pitch* and I'll send them our standard intro.`
+          `Got +${phone}${prospect?.name ? ` (${prospect.name})` : ''}. What should I say to them? Or reply *pitch* and I'll write a Galvaniq intro.`
         );
       }
       return;
     }
   }
 
-  // Send instruction without a stored phone
-  if (intent === 'SEND_INSTRUCTION' && !pending) {
-    await sendWhatsAppMessage(
-      from,
-      `Which number should I send to? Send me the contact's WhatsApp number.`
-    );
+  // Send instruction without a phone
+  if (intent === 'SEND_INSTRUCTION') {
+    await sendWhatsAppMessage(from, `Which number should I send to?`);
     return;
   }
 
-  // Pitch shortcut
-  if (/\bpitch\b/i.test(messageText) && pending?.clientPhone) {
-    const pitch = buildProspectPitch(pending?.prospectName);
+  // ══════════════════════════════════════════════════════════
+  // Everything else — GPT handles general admin queries
+  // ══════════════════════════════════════════════════════════
 
-    setPending(from, {
-      type: 'AWAITING_CONFIRM',
-      clientPhone: pending.clientPhone,
-      prospectName: pending.prospectName,
-      message: pitch,
-    });
-
-    await sendWhatsAppMessage(
-      from,
-      `Here's the pitch:\n\n"${pitch}"\n\nReply *send it* to confirm.`
-    );
-    return;
-  }
-
-  // ── Everything else — GPT handles ─────────────────────────
   try {
     const conversationHistory = await database
       .getConversationHistory(from)
@@ -419,11 +430,8 @@ async function processAdminMessage(from, messageText, messageId) {
 
     console.log(`✅ Admin pipeline complete for ${admin.name}\n`);
   } catch (error) {
-    console.error(`❌ Admin pipeline error:`, error.message);
-    await sendWhatsAppMessage(
-      from,
-      `Something went wrong — ${error.message}. Try again.`
-    );
+    console.error(`❌ Admin error:`, error.message);
+    await sendWhatsAppMessage(from, `Something went wrong — ${error.message}`);
   }
 }
 
@@ -432,7 +440,7 @@ async function processAdminMessage(from, messageText, messageId) {
 // ══════════════════════════════════════════════════════════════
 
 async function processClientMessage(from, messageText, messageId) {
-  console.log(`\n🔄 Processing client message from ${from}: "${messageText}"`);
+  console.log(`\n🔄 Client message from ${from}: "${messageText}"`);
 
   await markAsRead(messageId);
 
@@ -449,10 +457,9 @@ async function processClientMessage(from, messageText, messageId) {
 
     console.log(`🤖 IVAR: "${result.reply}"`);
     console.log(
-      `📊 Signals: handover=${result.handover} | notifyMichael=${result.notifyMichael} | notifyAshell=${result.notifyAshell}`
+      `📊 handover=${result.handover} | notifyMichael=${result.notifyMichael} | notifyAshell=${result.notifyAshell}`
     );
 
-    // Save to MongoDB
     await database.saveMessage({
       from,
       userMessage: messageText,
@@ -462,20 +469,21 @@ async function processClientMessage(from, messageText, messageId) {
       handoverReason: result.handoverReason,
     });
 
-    // Send reply to client
     await sendWhatsAppMessage(from, result.reply);
 
-    // Meeting request — notify Michael and store pending
+    // Meeting request — notify Michael
     if (result.meetingRequest) {
       const prospect = getProspectByPhone(from);
-      const notification = buildMichaelAlert(
-        prospect,
-        from,
-        `📅 *Meeting Request*\n${result.meetingRequest}\n\nReply *yes* to confirm or tell me an alternative time.`
+      await sendWhatsAppMessage(
+        MICHAEL_PHONE,
+        buildMichaelAlert(
+          prospect,
+          from,
+          `📅 *Meeting Request*\n${result.meetingRequest}\n\nReply *yes* to confirm or give an alternative time.`
+        )
       );
-      await sendWhatsAppMessage(MICHAEL_PHONE, notification);
-      setPending(MICHAEL_PHONE, {
-        type: 'MEETING_CONFIRM',
+      setState(MICHAEL_PHONE, {
+        state: 'MEETING_PENDING',
         clientPhone: from,
         meetingDetails: result.meetingRequest,
       });
@@ -484,18 +492,17 @@ async function processClientMessage(from, messageText, messageId) {
     // Notify Michael (non-meeting)
     if (result.notifyMichael && !result.meetingRequest) {
       const prospect = getProspectByPhone(from);
-      const notification = buildMichaelAlert(
-        prospect,
-        from,
-        result.notificationMessage ||
-          `New signal. Their message: "${messageText}"`
+      await sendWhatsAppMessage(
+        MICHAEL_PHONE,
+        buildMichaelAlert(
+          prospect,
+          from,
+          result.notificationMessage || `New signal. Their message: "${messageText}"`
+        )
       );
-      await sendWhatsAppMessage(MICHAEL_PHONE, notification);
-
-      // Store pending question so Michael can reply
       if (/uncertain/i.test(result.notificationMessage || '')) {
-        setPending(MICHAEL_PHONE, {
-          type: 'QUESTION',
+        setState(MICHAEL_PHONE, {
+          state: 'QUESTION_PENDING',
           clientPhone: from,
           question: messageText,
         });
@@ -505,15 +512,16 @@ async function processClientMessage(from, messageText, messageId) {
     // Notify Ashell
     if (result.notifyAshell) {
       const prospect = getProspectByPhone(from);
-      const notification = buildAshellAlert(
-        prospect,
-        from,
-        result.notificationMessage ||
-          `Technical question: "${messageText}"`
+      await sendWhatsAppMessage(
+        ASHELL_PHONE,
+        buildAshellAlert(
+          prospect,
+          from,
+          result.notificationMessage || `Technical question: "${messageText}"`
+        )
       );
-      await sendWhatsAppMessage(ASHELL_PHONE, notification);
-      setPending(ASHELL_PHONE, {
-        type: 'QUESTION',
+      setState(ASHELL_PHONE, {
+        state: 'QUESTION_PENDING',
         clientPhone: from,
         question: messageText,
       });
@@ -524,7 +532,7 @@ async function processClientMessage(from, messageText, messageId) {
       const escalateTo = result.escalateTo || 'michael';
 
       if (status !== 'handed_over') {
-        console.log(`🚨 Handover for ${from} → ${escalateTo}`);
+        console.log(`🚨 Handover → ${escalateTo}`);
         await executeHandover({
           customerNumber: from,
           reason: result.handoverReason,
@@ -536,11 +544,10 @@ async function processClientMessage(from, messageText, messageId) {
         });
         updateProspect(from, { stage: 'handed_over' });
       } else {
-        // Re-alert
         const prospect = getProspectByPhone(from);
         await sendWhatsAppMessage(
           MICHAEL_PHONE,
-          `🔁 *Follow-up Signal*\n${prospect?.name || from} (${prospect?.company || 'Unknown'}) sent a new signal.\n\nSignal: ${result.handoverReason}\nMessage: "${messageText}"`
+          `🔁 *Follow-up Signal*\n${prospect?.name || from} (${prospect?.company || 'Unknown'}) — new signal: ${result.handoverReason}\n"${messageText}"`
         );
       }
     }
@@ -554,7 +561,7 @@ async function processClientMessage(from, messageText, messageId) {
         `I'm just catching up — give me a moment. If it's urgent, email us at ${config.company.email_info}`
       );
     } catch (e) {
-      console.error('❌ Failed to send fallback:', e.message);
+      console.error('❌ Fallback failed:', e.message);
     }
   }
 }
@@ -564,36 +571,29 @@ async function processClientMessage(from, messageText, messageId) {
 // ══════════════════════════════════════════════════════════════
 
 function buildMichaelAlert(prospect, clientPhone, body) {
-  const name = prospect?.name || 'Unknown contact';
-  const company = prospect?.company || 'Unknown company';
-  const stage = prospect?.stage || 'inquiry';
-
   return [
     `📩 *IVAR Alert*`,
     ``,
-    `*Who:* ${name} (${company})`,
+    `*Who:* ${prospect?.name || 'Unknown'} (${prospect?.company || 'Unknown'})`,
     `*Phone:* +${clientPhone}`,
-    `*Stage:* ${stage}`,
+    `*Stage:* ${prospect?.stage || 'inquiry'}`,
     ``,
     body,
     ``,
-    `Reply here and I'll relay your message to them.`,
+    `Reply here and I'll relay it to them.`,
   ].join('\n');
 }
 
 function buildAshellAlert(prospect, clientPhone, body) {
-  const name = prospect?.name || 'Unknown contact';
-  const company = prospect?.company || 'Unknown company';
-
   return [
     `🔧 *IVAR Technical Escalation*`,
     ``,
-    `*Who:* ${name} (${company})`,
+    `*Who:* ${prospect?.name || 'Unknown'} (${prospect?.company || 'Unknown'})`,
     `*Phone:* +${clientPhone}`,
     ``,
     body,
     ``,
-    `Reply with the answer and I'll send it to them.`,
+    `Reply with the answer and I'll send it straight to them.`,
   ].join('\n');
 }
 
